@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 export default function CreateHouse() {
   const router = useRouter();
@@ -79,12 +80,10 @@ export default function CreateHouse() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Address
             </label>
-            <input
-              type="text"
+            <AddressAutocomplete
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={setAddress}
               placeholder="e.g. 42 Elm Street, Sydney"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
 
