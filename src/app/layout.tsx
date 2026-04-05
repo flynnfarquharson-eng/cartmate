@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import AuthGate from "@/components/AuthGate";
 
 export const metadata: Metadata = {
   title: "CartMate - Shared Grocery Orders",
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50 antialiased">
-        <div className="mx-auto max-w-lg min-h-screen">{children}</div>
+        <div className="mx-auto max-w-lg min-h-screen">
+          <AuthGate>{children}</AuthGate>
+        </div>
       </body>
     </html>
   );
