@@ -231,10 +231,15 @@ export default function ShopPage() {
                         className="max-h-full max-w-full object-contain"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                        <span className="text-3xl text-gray-300">
-                          {activeCat?.emoji || "📦"}
-                        </span>
+                      <div className="w-full h-full bg-white rounded-lg flex items-center justify-center border border-gray-100">
+                        <div className="text-center px-3">
+                          <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-1">
+                            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                          </div>
+                          <p className="text-[10px] text-gray-400 leading-tight line-clamp-2">{product.name}</p>
+                        </div>
                       </div>
                     )}
                   </div>
