@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getMemberId, getHouseId, formatPrice } from "@/lib/utils";
+import { getMemberId, getHouseId } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { CATEGORIES } from "@/lib/categories";
 import TabBar from "@/components/TabBar";
