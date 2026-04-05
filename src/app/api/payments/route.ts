@@ -6,6 +6,10 @@ export async function POST(request: Request) {
   const supabase = createServiceClient();
   const { orderId, memberId, amount, memberEmail } = await request.json();
 
+  if (!stripe) {
+    return NextResponse.json({ error: "Stripe is not configured" }, { status: 500 });
+  }
+
   if (!orderId || !memberId || !amount) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
