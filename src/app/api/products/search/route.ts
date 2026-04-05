@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { GROCERY_PRODUCTS } from "@/lib/groceries";
 
 let sessionCookies: string | null = null;
 let cookieTimestamp = 0;
-const COOKIE_TTL = 1000 * 60 * 30; // 30 minutes
+const COOKIE_TTL = 1000 * 60 * 30;
 
 async function getSessionCookies(): Promise<string> {
   if (sessionCookies && Date.now() - cookieTimestamp < COOKIE_TTL) {
@@ -20,6 +21,23 @@ async function getSessionCookies(): Promise<string> {
   sessionCookies = cookies.map((c) => c.split(";")[0]).join("; ");
   cookieTimestamp = Date.now();
   return sessionCookies;
+}
+
+function searchLocalProducts(query: string) {
+  const q = query.toLowerCase();
+  return GROCERY_PRODUCTS.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+  )
+    .slice(0, 8)
+    .map((p) => ({
+      name: p.name,
+      price: p.price,
+      image: null,
+      packageSize: null,
+      category: p.category,
+    }));
 }
 
 export async function GET(request: Request) {
@@ -56,7 +74,8 @@ export async function GET(request: Request) {
     );
 
     if (!res.ok) {
-      return NextResponse.json({ products: [] });
+      // Fallback to local products
+      return NextResponse.json({ products: searchLocalProducts(query) });
     }
 
     const data = await res.json();
@@ -66,7 +85,6 @@ export async function GET(request: Request) {
       Price: number;
       SmallImageFile: string;
       PackageSize: string;
-      IsInStock: boolean;
     }
 
     interface WoolworthsProductGroup {
@@ -87,10 +105,16 @@ export async function GET(request: Request) {
           packageSize: product.PackageSize,
         };
       })
-      .slice(0, 6);
+      .slice(0, 8);
+
+    // If Woolworths returned nothing, fall back to local
+    if (products.length === 0) {
+      return NextResponse.json({ products: searchLocalProducts(query) });
+    }
 
     return NextResponse.json({ products });
   } catch {
-    return NextResponse.json({ products: [] });
+    // Fallback to local products on any error
+    return NextResponse.json({ products: searchLocalProducts(query) });
   }
 }
