@@ -99,7 +99,7 @@ export default function ShopPage() {
     setSearchQuery("");
     setLoading(true);
 
-    fetch(`/api/products/search?q=${encodeURIComponent(category.searchTerm)}`)
+    fetch(`/api/products/search?q=${encodeURIComponent(category.searchTerm)}&category=${encodeURIComponent(category.localCategory)}`)
       .then((res) => res.json())
       .then((data) => {
         setProducts(data.products || []);

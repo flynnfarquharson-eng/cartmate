@@ -23,28 +23,53 @@ async function getSessionCookies(): Promise<string> {
   return sessionCookies;
 }
 
-function searchLocalProducts(query: string) {
-  const q = query.toLowerCase();
-  return GROCERY_PRODUCTS.filter(
-    (p) =>
-      p.name.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q)
-  )
-    .slice(0, 8)
-    .map((p) => ({
+function searchLocalProducts(query: string, category?: string) {
+  // If category is provided, filter by category first
+  if (category) {
+    const cats = category.split(",").map((c) => c.trim().toLowerCase());
+    const filtered = GROCERY_PRODUCTS.filter((p) =>
+      cats.some((c) => p.category.toLowerCase() === c)
+    );
+    return filtered.slice(0, 12).map((p) => ({
       name: p.name,
       price: p.price,
       image: null,
       packageSize: null,
       category: p.category,
     }));
+  }
+
+  // Otherwise search by matching any word in the query
+  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length >= 2);
+  const scored = GROCERY_PRODUCTS.map((p) => {
+    const name = p.name.toLowerCase();
+    const cat = p.category.toLowerCase();
+    let score = 0;
+    for (const word of words) {
+      if (name.includes(word)) score += 2;
+      if (cat.includes(word)) score += 1;
+    }
+    return { product: p, score };
+  })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8);
+
+  return scored.map((s) => ({
+    name: s.product.name,
+    price: s.product.price,
+    image: null,
+    packageSize: null,
+    category: s.product.category,
+  }));
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
+  const category = searchParams.get("category");
 
-  if (!query || query.length < 2) {
+  if ((!query || query.length < 2) && !category) {
     return NextResponse.json({ products: [] });
   }
 
@@ -61,12 +86,12 @@ export async function GET(request: Request) {
           "User-Agent":
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           Origin: "https://www.woolworths.com.au",
-          Referer: `https://www.woolworths.com.au/shop/search/products?searchTerm=${encodeURIComponent(query)}`,
+          Referer: `https://www.woolworths.com.au/shop/search/products?searchTerm=${encodeURIComponent(query || "")}`,
           Cookie: cookies,
         },
         body: JSON.stringify({
-          SearchTerm: query,
-          PageSize: 8,
+          SearchTerm: query || category,
+          PageSize: 12,
           PageNumber: 1,
           SortType: "TraderRelevance",
         }),
@@ -74,8 +99,9 @@ export async function GET(request: Request) {
     );
 
     if (!res.ok) {
-      // Fallback to local products
-      return NextResponse.json({ products: searchLocalProducts(query) });
+      return NextResponse.json({
+        products: searchLocalProducts(query || "", category || undefined),
+      });
     }
 
     const data = await res.json();
@@ -105,16 +131,18 @@ export async function GET(request: Request) {
           packageSize: product.PackageSize,
         };
       })
-      .slice(0, 8);
+      .slice(0, 12);
 
-    // If Woolworths returned nothing, fall back to local
     if (products.length === 0) {
-      return NextResponse.json({ products: searchLocalProducts(query) });
+      return NextResponse.json({
+        products: searchLocalProducts(query || "", category || undefined),
+      });
     }
 
     return NextResponse.json({ products });
   } catch {
-    // Fallback to local products on any error
-    return NextResponse.json({ products: searchLocalProducts(query) });
+    return NextResponse.json({
+      products: searchLocalProducts(query || "", category || undefined),
+    });
   }
 }
