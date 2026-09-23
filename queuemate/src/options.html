@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>QueueMate settings</title>
+  <link rel="stylesheet" href="popup.css" />
+  <style>
+    body { width: auto; max-width: 560px; margin: 24px auto; padding: 0 16px; }
+    label { display: block; margin: 14px 0 4px; font-weight: 600; }
+    input[type='text'], input[type='number'], input[type='url'] { width: 100%; padding: 7px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--fg); font: inherit; }
+    .check { display: flex; gap: 8px; align-items: center; font-weight: 400; }
+    ol { padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <h1>🎟️ QueueMate settings</h1>
+
+  <h2>“Almost your turn” alert</h2>
+  <label for="nearAhead">Alert when this many people (or fewer) are ahead of you</label>
+  <input id="nearAhead" type="number" min="0" step="10" />
+  <label for="nearMinutes">…or when the estimated wait drops to this many minutes</label>
+  <input id="nearMinutes" type="number" min="0" />
+
+  <h2>Sound</h2>
+  <label class="check"><input id="sound" type="checkbox" /> Play a chime with alerts</label>
+
+  <h2>Phone alerts (optional)</h2>
+  <p class="muted">
+    Uses <a href="https://ntfy.sh" target="_blank">ntfy</a>, a free push app. No account needed:
+  </p>
+  <ol class="muted">
+    <li>Install the ntfy app on your phone (iOS or Android).</li>
+    <li>Subscribe to a hard-to-guess topic name, for example <code>queuemate-7f3k9x</code>.</li>
+    <li>Enter the same topic below and press <em>Save</em>, then <em>Test alert</em> in the popup.</li>
+  </ol>
+  <label for="ntfyTopic">ntfy topic</label>
+  <input id="ntfyTopic" type="text" placeholder="queuemate-your-secret-name" />
+  <label for="ntfyServer">ntfy server</label>
+  <input id="ntfyServer" type="url" />
+
+  <p><button id="save">Save</button> <span id="saved" class="muted"></span></p>
+
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "QueueMate – ticket queue alerts",
+  "short_name": "QueueMate",
+  "version": "0.1.0",
+  "description": "Watches your ticket queue tab and alerts you (desktop, sound and phone) when you're nearly at the front and when it's your turn.",
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "options_page": "src/options.html",
+  "background": { "service_worker": "src/background.js" },
+  "permissions": ["tabs", "storage", "notifications", "offscreen", "scripting", "activeTab"],
+  "host_permissions": ["https://ntfy.sh/*"],
+  "optional_host_permissions": ["https://*/*"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.queue-it.net/*",
+        "https://*.ticketmaster.com/*",
+        "https://*.ticketmaster.com.au/*",
+        "https://*.ticketmaster.co.nz/*",
+        "https://*.ticketmaster.co.uk/*",
+        "https://*.ticketmaster.ie/*",
+        "https://*.ticketmaster.ca/*",
+        "https://*.ticketek.com.au/*",
+        "https://*.ticketek.co.nz/*",
+        "https://*.axs.com/*",
+        "https://*.livenation.com/*",
+        "https://*.seetickets.com/*",
+        "https://*.oztix.com.au/*",
+        "https://*.moshtix.com.au/*",
+        "https://*.eventim.de/*"
+      ],
+      "js": ["src/parse.js", "src/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

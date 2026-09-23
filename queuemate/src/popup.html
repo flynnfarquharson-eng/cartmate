@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>🎟️ QueueMate</h1>
+    <a href="options.html" target="_blank" title="Settings">⚙️</a>
+  </header>
+
+  <section id="queues"></section>
+
+  <p id="empty" class="muted" hidden>
+    No queues yet. Open your ticket queue as normal and QueueMate will pick it up automatically.
+  </p>
+
+  <div class="actions">
+    <button id="watch">Watch this tab</button>
+    <button id="test" class="secondary">Test alert</button>
+  </div>
+  <p id="msg" class="muted"></p>
+
+  <footer class="muted">
+    Keep the queue tab open and your computer awake. QueueMate only reads the page. It never
+    refreshes, clicks or buys anything for you.
+  </footer>
+
+  <template id="card">
+    <article class="card">
+      <div class="row">
+        <strong class="title"></strong>
+        <button class="stop link" title="Stop watching">✕</button>
+      </div>
+      <div class="status"></div>
+      <div class="bar"><div class="fill"></div></div>
+      <dl>
+        <div><dt>Ahead of you</dt><dd class="ahead">–</dd></div>
+        <div><dt>Est. wait</dt><dd class="eta">–</dd></div>
+        <div><dt>Speed</dt><dd class="rate">–</dd></div>
+      </dl>
+      <button class="go">Go to tab</button>
+    </article>
+  </template>
+
+  <script src="parse.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

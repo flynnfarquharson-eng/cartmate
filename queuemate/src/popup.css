@@ -1,0 +1,33 @@
+:root {
+  --bg: #ffffff; --fg: #0f172a; --muted: #64748b; --card: #f8fafc; --border: #e2e8f0;
+  --accent: #4f46e5; --go: #16a34a;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --card: #1e293b; --border: #334155; }
+}
+* { box-sizing: border-box; }
+body { width: 340px; margin: 0; padding: 14px; font: 13px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+header a { text-decoration: none; font-size: 16px; }
+h1 { font-size: 16px; margin: 0; }
+.muted { color: var(--muted); font-size: 12px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+.card.turn { border-color: var(--go); box-shadow: 0 0 0 2px color-mix(in srgb, var(--go) 30%, transparent); }
+.row { display: flex; justify-content: space-between; gap: 8px; }
+.title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status { margin: 4px 0 8px; color: var(--muted); }
+.turn .status { color: var(--go); font-weight: 600; }
+.bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.fill { height: 100%; width: 0; background: var(--accent); transition: width 0.4s; }
+.turn .fill { background: var(--go); }
+dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+dt { font-size: 11px; color: var(--muted); }
+dd { margin: 0; font-weight: 600; font-size: 15px; }
+button { font: inherit; border: 0; border-radius: 8px; padding: 7px 12px; background: var(--accent); color: #fff; cursor: pointer; }
+button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+button.link { background: none; color: var(--muted); padding: 0 4px; }
+.go { width: 100%; }
+.turn .go { background: var(--go); }
+.actions { display: flex; gap: 8px; }
+.actions button { flex: 1; }
+footer { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; }
