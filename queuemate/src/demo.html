@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Demo queue – QueueMate</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; background: #f1f5f9; color: #0f172a; margin: 0; padding: 40px 16px; }
+    .box { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px #0001; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .muted { color: #64748b; font-size: 14px; }
+    .big { font-size: 40px; font-weight: 700; margin: 12px 0 0; }
+    .track { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin: 18px 0; }
+    #MainPart_divProgressbar { height: 100%; background: #4f46e5; width: 0%; transition: width 0.8s; }
+    .done { text-align: center; }
+    .done h1 { color: #16a34a; font-size: 28px; }
+    .banner { background: #fef3c7; border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+  <div class="box" id="queue">
+    <div class="banner">🧪 This is a <b>practice queue</b> for testing QueueMate. No real tickets.</div>
+    <h1>You are now in line</h1>
+    <p class="muted">Waiting room · Demo Concert 2026. Do not close this tab.</p>
+    <p class="muted">Number of users in line ahead of you:</p>
+    <div class="big" id="MainPart_lbUsersInLineAheadOfYou">–</div>
+    <div class="track"><div id="MainPart_divProgressbar"></div></div>
+    <p class="muted">Expected wait time: <span id="MainPart_lbExpectedServiceTime">–</span></p>
+  </div>
+  <div class="box done" id="done" hidden>
+    <h1>🎉 You're through!</h1>
+    <p>This is where the real site would let you choose seats and check out.</p>
+    <p class="muted">Close this tab whenever you like.</p>
+  </div>
+  <script src="demo.js"></script>
+  <script src="parse.js"></script>
+  <script src="content.js"></script>
+</body>
+</html>

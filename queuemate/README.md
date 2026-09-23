@@ -22,6 +22,7 @@ and within anti-ticket-bot laws (NSW and Victoria in Australia, the US BOTS Act)
 2. Turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select this `queuemate/` folder.
 4. Pin QueueMate to the toolbar, open the popup and press **Test alert**.
+5. Press **🧪 Try a practice queue**. It's a fake 4-minute waiting room that sends the "almost" and "your turn" alerts, so you can check everything works before a real on-sale.
 
 ## Phone alerts
 

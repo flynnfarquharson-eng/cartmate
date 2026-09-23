@@ -66,6 +66,8 @@ $('#test').addEventListener('click', () =>
   chrome.runtime.sendMessage({ type: 'test-alert' }).then(() => ($('#msg').textContent = 'Test alert sent.'))
 );
 
+$('#demo').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('src/demo.html') }));
+
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'session' && changes.tabs) render();
 });
