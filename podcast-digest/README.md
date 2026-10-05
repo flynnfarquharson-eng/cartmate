@@ -1,0 +1,48 @@
+# Podcast Digest
+
+Follow podcasts, get AI summaries of new episodes, and keep the best tips in a searchable library.
+
+Built with Next.js 16, Supabase, Podcast Index, Deepgram and Claude.
+
+**Key rule:** each episode is processed once and shared by everyone who follows the show, so costs grow with the number of shows, not users.
+
+## Status
+
+- [x] **Phase 1** – login, podcast search, follow/unfollow, RSS polling that saves new episodes
+- [ ] Phase 2 – transcription + summarisation pipeline
+- [ ] Phase 3 – feed of summaries, episode pages, tips library
+- [ ] Phase 4 – admin page, deployment to Vercel, hourly cron
+
+## Setup (Phase 1)
+
+You need Node.js 20 or newer (`node -v` to check; install from https://nodejs.org).
+
+### 1. Create a Supabase project
+1. Sign up at https://supabase.com and click **New project**. Pick any name, a strong database password, and the region closest to you. Wait ~2 minutes for it to start.
+2. Open **SQL Editor** (left sidebar) → **New query**. Paste the whole contents of `supabase/migrations/001_initial_schema.sql` and click **Run**. You should see "Success. No rows returned".
+3. Open **Authentication → URL Configuration**:
+   - **Site URL**: `http://localhost:3000`
+   - **Redirect URLs**: add `http://localhost:3000/**`
+4. Open **Project Settings → API Keys** and copy the **Publishable key** and the **Secret key**. Your **Project URL** is under **Project Settings → Data API** (looks like `https://abcd1234.supabase.co`).
+
+> Supabase's built-in email sender only allows a few login emails per hour. That's fine for testing. Before launching to real users we'll connect a proper email service (Phase 4).
+
+### 2. Get a Podcast Index API key
+Sign up (free) at https://api.podcastindex.org/signup. The key and secret are emailed to you.
+
+### 3. Configure and run
+From this `podcast-digest` folder:
+
+```bash
+cp .env.example .env.local      # then open .env.local and paste your keys
+npm install
+npm run dev
+```
+
+Open http://localhost:3000.
+
+## How it works (Phase 1)
+
+- **Follow a show** → the show is saved once in `podcasts` (shared by all users) and its 3 most recent episodes are imported as `pending`. Older back-catalogue episodes are skipped so we never pay to summarise hundreds of old episodes.
+- **Feed check** (`/api/cron/poll-feeds`) → downloads the RSS feed of every show that at least one person follows and saves new episodes as `pending`. It skips feeds that haven't changed, and the database rejects duplicate episodes, so it's safe to run as often as you like.
+- **Transcripts are private**: they live in a table that the browser can't read at all.
