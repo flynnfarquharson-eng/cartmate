@@ -1,0 +1,12 @@
+// Shapes of the JSON columns in `summaries`, as written by src/lib/summarise.ts.
+
+export type KeyIdea = { title: string; detail: string };
+export type Quote = { quote: string; speaker: string | null; timestamp_seconds: number | null };
+export type Resource = { name: string; type: string; url: string | null };
+
+export type TipRow = {
+  id: string;
+  tip_text: string;
+  category: string | null;
+  timestamp_seconds: number | null;
+};

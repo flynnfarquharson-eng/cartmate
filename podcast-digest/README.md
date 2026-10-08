@@ -10,7 +10,7 @@ Built with Next.js 16, Supabase, Podcast Index, Deepgram and Claude.
 
 - [x] **Phase 1** – login, podcast search, follow/unfollow, RSS polling that saves new episodes
 - [x] **Phase 2** – transcription + summarisation pipeline (needs `ANTHROPIC_API_KEY` + `DEEPGRAM_API_KEY`)
-- [ ] Phase 3 – feed of summaries, episode pages, tips library
+- [x] **Phase 3** – feed of summaries, episode pages with tap-to-play timestamps, searchable tips library with saving
 - [ ] Phase 4 – admin page, deployment to Vercel, hourly cron
 
 ## Setup (Phase 1)

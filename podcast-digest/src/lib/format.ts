@@ -24,3 +24,12 @@ export function formatDuration(seconds: number | null | undefined): string {
   const m = Math.round((seconds % 3600) / 60);
   return h ? `${h}h ${m}m` : `${m}m`;
 }
+
+/** 3725 -> "1:02:05", 125 -> "2:05" */
+export function formatTimestamp(seconds: number): string {
+  const s = Math.floor(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+}

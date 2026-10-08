@@ -12,12 +12,17 @@ type EpisodeRow = {
   published_at: string | null;
   duration_seconds: number | null;
   status: string;
-  episode_url: string | null;
   podcasts: { title: string; image_url: string | null } | null;
+  // One-to-one, but PostgREST may return it as an object or a 1-item array.
+  summaries: { overview: string } | { overview: string }[] | null;
+  tips: { count: number }[];
 };
 
-// Phase 1 version: lists the latest episodes from shows you follow, with their
-// processing status. Phase 3 turns this into a feed of summaries.
+function overviewOf(e: EpisodeRow): string | null {
+  const s = Array.isArray(e.summaries) ? e.summaries[0] : e.summaries;
+  return s?.overview ?? null;
+}
+
 export default async function FeedPage() {
   const supabase = await createClient();
   const { data: follows } = await supabase.from("user_follows").select("podcast_id");
@@ -40,7 +45,9 @@ export default async function FeedPage() {
 
   const { data } = await supabase
     .from("episodes")
-    .select("id, title, published_at, duration_seconds, status, episode_url, podcasts(title, image_url)")
+    .select(
+      "id, title, published_at, duration_seconds, status, podcasts(title, image_url), summaries(overview), tips(count)",
+    )
     .in("podcast_id", ids)
     .order("published_at", { ascending: false, nullsFirst: false })
     .limit(50);
@@ -49,21 +56,42 @@ export default async function FeedPage() {
   return (
     <>
       <h1 className="mb-4 text-2xl font-semibold tracking-tight">Latest episodes</h1>
-      <ul className="space-y-2">
-        {episodes.map((e) => (
-          <li key={e.id} className="flex gap-3 rounded-2xl border border-border bg-surface p-3">
-            <PodcastArt src={e.podcasts?.image_url} alt={e.podcasts?.title ?? ""} size={48} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-muted">{e.podcasts?.title}</p>
-              <p className="line-clamp-2 font-medium leading-snug">{e.title}</p>
-              <div className="mt-1 flex items-center gap-2 text-xs text-muted">
-                <StatusBadge status={e.status} />
-                <span>{timeAgo(e.published_at)}</span>
-                {e.duration_seconds ? <span>· {formatDuration(e.duration_seconds)}</span> : null}
-              </div>
-            </div>
-          </li>
-        ))}
+      <ul className="space-y-3">
+        {episodes.map((e) => {
+          const overview = overviewOf(e);
+          const tipCount = e.tips?.[0]?.count ?? 0;
+          return (
+            <li key={e.id}>
+              <Link
+                href={`/episode/${e.id}`}
+                className="block rounded-2xl border border-border bg-surface p-4 transition hover:border-accent"
+              >
+                <div className="flex gap-3">
+                  <PodcastArt src={e.podcasts?.image_url} alt={e.podcasts?.title ?? ""} size={48} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs text-muted">
+                      {e.podcasts?.title} · {timeAgo(e.published_at)}
+                      {e.duration_seconds ? ` · ${formatDuration(e.duration_seconds)}` : ""}
+                    </p>
+                    <p className="line-clamp-2 font-medium leading-snug">{e.title}</p>
+                  </div>
+                </div>
+                {overview ? (
+                  <>
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted">{overview}</p>
+                    <p className="mt-2 text-xs font-medium text-accent">
+                      {tipCount ? `${tipCount} tips · ` : ""}Read summary →
+                    </p>
+                  </>
+                ) : (
+                  <div className="mt-2">
+                    <StatusBadge status={e.status} />
+                  </div>
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
       {!episodes.length && (
         <p className="mt-8 text-center text-sm text-muted">

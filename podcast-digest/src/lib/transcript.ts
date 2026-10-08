@@ -1,5 +1,6 @@
 import "server-only";
 import { requireEnv } from "@/lib/env";
+import { formatTimestamp } from "@/lib/format";
 
 export type Segment = { start: number; end: number; text: string };
 
@@ -145,14 +146,6 @@ async function transcribeWithDeepgram(audioUrl: string): Promise<Transcript> {
 // Formatting for the summariser
 // ─────────────────────────────────────────────────────────────
 
-function clock(seconds: number): string {
-  const s = Math.floor(seconds);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = String(s % 60).padStart(2, "0");
-  return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
-}
-
 /**
  * Turns segments into "[12:34] text" lines, merged into ~30 second chunks so
  * Claude can cite timestamps without paying for one timestamp per sentence.
@@ -164,12 +157,12 @@ export function formatForSummary(transcript: { text: string; segments: Segment[]
   let chunk: string[] = [];
   for (const seg of transcript.segments) {
     if (chunk.length && seg.start - chunkStart >= 30) {
-      lines.push(`[${clock(chunkStart)}] ${chunk.join(" ")}`);
+      lines.push(`[${formatTimestamp(chunkStart)}] ${chunk.join(" ")}`);
       chunk = [];
       chunkStart = seg.start;
     }
     chunk.push(seg.text);
   }
-  if (chunk.length) lines.push(`[${clock(chunkStart)}] ${chunk.join(" ")}`);
+  if (chunk.length) lines.push(`[${formatTimestamp(chunkStart)}] ${chunk.join(" ")}`);
   return lines.join("\n");
 }
