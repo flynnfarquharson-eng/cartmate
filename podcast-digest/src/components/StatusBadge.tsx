@@ -6,12 +6,20 @@ const STYLES: Record<string, string> = {
   failed: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
 };
 
+const LABELS: Record<string, string> = {
+  pending: "Summary coming soon",
+  transcribing: "Transcribing…",
+  summarising: "Summarising…",
+  done: "Summary ready",
+  failed: "Couldn't summarise",
+};
+
 export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${STYLES[status] ?? STYLES.pending}`}
     >
-      {status}
+      {LABELS[status] ?? status}
     </span>
   );
 }

@@ -6,8 +6,9 @@ import { SearchClient } from "@/components/SearchClient";
 import { PickedForYou, PopularWithFriends, ShelfSkeleton, TopChart, type Preferences } from "./sections";
 
 export const metadata = { title: "Discover · Podcast Digest" };
-// "Picked for you" can take ~15 seconds the first time (Claude + checking each show).
-export const maxDuration = 60;
+// "Picked for you" can take ~15 seconds the first time (Claude + checking each show),
+// and following a new show summarises its latest episode in the background.
+export const maxDuration = 300;
 
 export default async function DiscoverPage() {
   const supabase = await createClient();

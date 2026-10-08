@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPodcastByFeedUrl, getPodcastByItunesId } from "@/lib/podcast-index";
 import { lookupApple } from "@/lib/apple";
 import { pollPodcastById } from "@/lib/poll";
+import { processPendingForPodcast } from "@/lib/process";
 import type { RecSource } from "@/lib/types";
 
 type ActionResult = { ok: true; podcastId: string } | { ok: false; error: string };
@@ -68,9 +70,19 @@ export async function followPodcast(itunesId: number, source: RecSource = "searc
     { onConflict: "user_id,itunes_id,source" },
   );
 
-  // First time anyone has followed this show: grab its latest episodes right away.
+  // First time anyone has followed this show: grab its latest episode right away,
+  // then summarise it in the background so it's ready in a minute or two rather
+  // than after the next scheduled run.
   if (!podcast.import_after) {
     await pollPodcastById(podcast.id);
+    after(async () => {
+      try {
+        const results = await processPendingForPodcast(podcast.id);
+        console.log("[follow] summarised new show:", JSON.stringify(results));
+      } catch (err) {
+        console.error("[follow] background summarise failed:", err);
+      }
+    });
   }
 
   revalidatePath("/settings");

@@ -11,6 +11,9 @@ import type { RecSource } from "@/lib/types";
 
 const SOURCES: RecSource[] = ["claude", "friends", "chart", "search", "link"];
 
+// Following a new show summarises its latest episode in the background.
+export const maxDuration = 300;
+
 type StoredEpisode = {
   id: string;
   title: string;
@@ -111,7 +114,7 @@ export default async function PodcastPreviewPage({ params, searchParams }: PageP
         {!ours.length && !theirs.length && <p className="text-sm text-muted">No recent episodes found.</p>}
         {!stored && (
           <p className="mt-3 text-xs text-muted">
-            Follow to get a summary of each new episode. We summarise the latest 3 straight away.
+            Follow to get a summary of each new episode. We summarise the latest one straight away.
           </p>
         )}
       </section>

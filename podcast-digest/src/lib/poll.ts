@@ -2,8 +2,11 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseFeed } from "@/lib/rss";
 
-/** When someone follows a brand-new show, import only this many recent episodes. */
-const INITIAL_EPISODES = 3;
+/**
+ * When someone follows a brand-new show, import only this many recent episodes.
+ * Each one gets summarised, so this is the main cost of a new follow.
+ */
+const INITIAL_EPISODES = 1;
 /** Safety cap: never import more than this many episodes from one feed in one check. */
 const MAX_NEW_PER_POLL = 10;
 /** How many feeds to download at the same time. */

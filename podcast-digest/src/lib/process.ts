@@ -11,6 +11,11 @@ const MAX_ATTEMPTS = 3;
 const STALE_AFTER_MS = 15 * 60 * 1000;
 /** Cost guard: skip episodes longer than this (minutes) rather than pay to transcribe them. */
 const MAX_EPISODE_MINUTES = 240;
+/**
+ * Cost guard: never start more than this many episodes in 24 hours, across everyone.
+ * At roughly US$0.15-0.45 each, 30 a day is at most ~US$13. Override with MAX_EPISODES_PER_DAY.
+ */
+const MAX_EPISODES_PER_DAY = Number(process.env.MAX_EPISODES_PER_DAY) || 30;
 
 type EpisodeRow = {
   id: string;
@@ -157,12 +162,28 @@ async function processEpisode(db: Db, episode: EpisodeRow): Promise<ProcessResul
   }
 }
 
+/** How many more episodes we may start today before hitting the daily cap. */
+async function dailyAllowance(db: Db): Promise<number> {
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { count, error } = await db
+    .from("episodes")
+    .select("id", { count: "exact", head: true })
+    .gte("processing_started_at", since);
+  if (error) throw new Error(error.message);
+  const left = MAX_EPISODES_PER_DAY - (count ?? 0);
+  if (left <= 0) console.warn(`[process] daily cap of ${MAX_EPISODES_PER_DAY} episodes reached, waiting`);
+  return Math.max(0, left);
+}
+
 /** Process one specific episode now (e.g. an admin retry). Still claims it, so it can't run twice. */
 export async function processEpisodeById(episodeId: string): Promise<ProcessResult> {
   const db = createAdminClient();
   const { data, error } = await db.from("episodes").select(EPISODE_COLUMNS).eq("id", episodeId).single();
   if (error || !data) throw new Error(`Episode ${episodeId} not found`);
   const episode = data as unknown as EpisodeRow;
+  if (!(await dailyAllowance(db))) {
+    return { episodeId, title: episode.title, status: "skipped", error: "Daily limit reached" };
+  }
   if (!(await claim(db, episode))) {
     return { episodeId, title: episode.title, status: "skipped", error: "Already being processed" };
   }
@@ -173,6 +194,8 @@ export async function processEpisodeById(episodeId: string): Promise<ProcessResu
 export async function processPendingEpisodes(limit = BATCH_SIZE): Promise<ProcessResult[]> {
   const db = createAdminClient();
   const results: ProcessResult[] = [];
+  limit = Math.min(limit, await dailyAllowance(db));
+  if (!limit) return results;
 
   for (const episode of await findCandidates(db, limit)) {
     if (results.filter((r) => r.status !== "skipped").length >= limit) break;
@@ -193,5 +216,24 @@ export async function processPendingEpisodes(limit = BATCH_SIZE): Promise<Proces
     if (!(await claim(db, episode))) continue; // another run got it first
     results.push(await processEpisode(db, episode));
   }
+  return results;
+}
+
+/**
+ * Summarise a show's pending episodes straight away, e.g. right after the first
+ * person follows it, so they don't wait for the next scheduled run.
+ */
+export async function processPendingForPodcast(podcastId: string): Promise<ProcessResult[]> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("episodes")
+    .select("id")
+    .eq("podcast_id", podcastId)
+    .eq("status", "pending")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .limit(BATCH_SIZE);
+  if (error) throw new Error(error.message);
+  const results: ProcessResult[] = [];
+  for (const { id } of data ?? []) results.push(await processEpisodeById(id));
   return results;
 }
