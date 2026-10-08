@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PodcastArt } from "@/components/PodcastArt";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -29,12 +30,15 @@ export default async function FeedPage() {
   const ids = (follows ?? []).map((f) => f.podcast_id);
 
   if (!ids.length) {
+    // Brand-new users start on the welcome screen.
+    const { data: prefs } = await supabase.from("user_preferences").select("user_id").maybeSingle();
+    if (!prefs) redirect("/welcome");
     return (
       <div className="mt-16 text-center">
         <h1 className="text-xl font-semibold">Your feed is empty</h1>
         <p className="mt-2 text-muted">Follow a few podcasts to get started.</p>
         <Link
-          href="/search"
+          href="/discover"
           className="mt-6 inline-block rounded-full bg-accent px-5 py-2.5 font-medium text-white dark:text-black"
         >
           Find podcasts

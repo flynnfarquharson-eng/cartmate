@@ -2,42 +2,47 @@
 
 import { useState, useTransition } from "react";
 import { followPodcast, unfollowPodcast } from "@/app/actions/follows";
+import type { RecSource } from "@/lib/types";
 
-/** Follow / Following toggle for a search result. */
+/** Follow / Following toggle for a show, identified by its Apple Podcasts id. */
 export function FollowButton({
-  podcastIndexId,
+  itunesId,
   podcastId: initialPodcastId,
+  source = "search",
+  size = "md",
 }: {
-  podcastIndexId: number;
+  itunesId: number;
+  /** Our podcast id when already followed, else null. */
   podcastId: string | null;
+  source?: RecSource;
+  size?: "sm" | "md";
 }) {
   const [podcastId, setPodcastId] = useState(initialPodcastId);
   const [following, setFollowing] = useState(!!initialPodcastId);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
-  function toggle() {
+  function toggle(e: React.MouseEvent) {
+    e.preventDefault(); // buttons sit inside links on cards
+    e.stopPropagation();
     setError("");
     startTransition(async () => {
       const res =
-        following && podcastId
-          ? await unfollowPodcast(podcastId)
-          : await followPodcast(podcastIndexId);
+        following && podcastId ? await unfollowPodcast(podcastId) : await followPodcast(itunesId, source);
       if (!res.ok) return setError(res.error);
       setPodcastId(res.podcastId);
       setFollowing(!following);
     });
   }
 
+  const sizing = size === "sm" ? "min-w-[84px] px-3 py-1 text-xs" : "min-w-[96px] px-4 py-1.5 text-sm";
   return (
     <div className="flex flex-col items-end">
       <button
         onClick={toggle}
         disabled={pending}
-        className={`min-w-[96px] rounded-full px-4 py-1.5 text-sm font-medium transition disabled:opacity-60 ${
-          following
-            ? "border border-border bg-surface text-text"
-            : "bg-accent text-white dark:text-black"
+        className={`rounded-full font-medium transition disabled:opacity-60 ${sizing} ${
+          following ? "border border-border bg-surface text-text" : "bg-accent text-white dark:text-black"
         }`}
       >
         {pending ? "…" : following ? "Following" : "Follow"}

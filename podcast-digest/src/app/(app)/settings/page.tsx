@@ -4,6 +4,7 @@ import { isAdminEmail } from "@/lib/env";
 import { PodcastArt } from "@/components/PodcastArt";
 import { UnfollowButton } from "@/components/FollowButton";
 import { timeAgo } from "@/lib/format";
+import { RecommendationStats } from "@/components/RecommendationStats";
 
 export const metadata = { title: "Settings · Podcast Digest" };
 
@@ -34,6 +35,13 @@ export default async function SettingsPage() {
     <div className="space-y-8">
       <section>
         <h1 className="mb-4 text-2xl font-semibold tracking-tight">Settings</h1>
+        <Link
+          href="/welcome"
+          className="mb-3 flex items-center justify-between rounded-2xl border border-border bg-surface p-4"
+        >
+          <span>Your interests</span>
+          <span className="text-sm text-accent">Edit →</span>
+        </Link>
         <div className="rounded-2xl border border-border bg-surface p-4">
           <p className="text-sm text-muted">Logged in as</p>
           <p className="font-medium">{user?.email}</p>
@@ -46,7 +54,7 @@ export default async function SettingsPage() {
       <section>
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-lg font-semibold">Shows you follow ({follows.length})</h2>
-          <Link href="/search" className="text-sm text-accent">
+          <Link href="/discover" className="text-sm text-accent">
             + Add
           </Link>
         </div>
@@ -101,6 +109,8 @@ export default async function SettingsPage() {
             Summarising does 2 episodes per click and can take a few minutes. It costs money
             (Deepgram + Claude) unless the show publishes its own transcript.
           </p>
+          <h3 className="mb-2 mt-6 font-semibold">Which suggestions work</h3>
+          <RecommendationStats />
         </section>
       )}
     </div>

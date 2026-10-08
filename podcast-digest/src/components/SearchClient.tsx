@@ -1,24 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PodcastArt } from "@/components/PodcastArt";
-import { FollowButton } from "@/components/FollowButton";
-import type { PodcastSearchResult } from "@/lib/podcast-index";
+import { ShowRow } from "@/components/ShowCard";
+import type { RecSource, ShowSummary } from "@/lib/types";
 
+/** Search box that also accepts a pasted Apple Podcasts or Spotify link. */
 export function SearchClient({ followed }: { followed: Record<number, string> }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<PodcastSearchResult[]>([]);
+  const [results, setResults] = useState<ShowSummary[]>([]);
+  const [source, setSource] = useState<RecSource>("search");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const latest = useRef(0);
 
+  const q = query.trim();
+  const isLink = /^https?:\/\//i.test(q);
+
   useEffect(() => {
-    const q = query.trim();
     if (q.length < 2) {
       latest.current++; // ignore any search still in flight
       return;
     }
     const id = ++latest.current;
+    // Links are pasted all at once, so look them up straight away.
     const timer = setTimeout(async () => {
       setLoading(true);
       setError("");
@@ -28,52 +32,47 @@ export function SearchClient({ followed }: { followed: Record<number, string> })
         if (id !== latest.current) return; // a newer search has started
         if (!res.ok) throw new Error(data.error ?? "Search failed");
         setResults(data.results);
+        setSource(data.source ?? "search");
       } catch (err) {
-        if (id === latest.current) setError(err instanceof Error ? err.message : "Search failed");
+        if (id === latest.current) {
+          setResults([]);
+          setError(err instanceof Error ? err.message : "Search failed");
+        }
       } finally {
         if (id === latest.current) setLoading(false);
       }
-    }, 350);
+    }, isLink ? 0 : 350);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [q, isLink]);
 
-  const active = query.trim().length >= 2;
+  const active = q.length >= 2;
   const shown = active ? results : [];
 
   return (
     <div>
       <input
         type="search"
-        autoFocus
-        placeholder="Search podcasts by name or topic"
+        placeholder="Search a show, or paste an Apple / Spotify link"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-accent"
       />
 
-      <div className="mt-2 h-5 text-sm text-muted">
-        {active && loading ? "Searching…" : active && error ? <span className="text-red-600">{error}</span> : null}
+      <div className="mt-2 min-h-5 text-sm text-muted">
+        {active && loading ? (
+          isLink ? "Finding that show…" : "Searching…"
+        ) : active && error ? (
+          <span className="text-red-600">{error}</span>
+        ) : !active ? (
+          <span className="text-xs">
+            Tip: in Apple Podcasts or Spotify, tap Share → Copy link on a show, then paste it here.
+          </span>
+        ) : null}
       </div>
 
       <ul className="space-y-2">
         {shown.map((r) => (
-          <li
-            key={r.podcastIndexId}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3"
-          >
-            <PodcastArt src={r.imageUrl} alt={r.title} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{r.title}</p>
-              <p className="truncate text-sm text-muted">{r.author}</p>
-              {r.episodeCount != null && (
-                <p className="text-xs text-muted">{r.episodeCount} episodes</p>
-              )}
-            </div>
-            <FollowButton
-              podcastIndexId={r.podcastIndexId}
-              podcastId={followed[r.podcastIndexId] ?? null}
-            />
-          </li>
+          <ShowRow key={r.itunesId} show={r} source={source} podcastId={followed[r.itunesId] ?? null} />
         ))}
       </ul>
 

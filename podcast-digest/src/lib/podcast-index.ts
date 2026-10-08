@@ -15,6 +15,7 @@ export type PodcastIndexFeed = {
   url: string; // RSS feed URL
   link: string; // show website
   episodeCount?: number;
+  itunesId?: number | null;
 };
 
 export type PodcastSearchResult = {
@@ -26,6 +27,7 @@ export type PodcastSearchResult = {
   rssUrl: string;
   websiteUrl: string;
   episodeCount: number | null;
+  itunesId: number | null;
 };
 
 async function call<T>(path: string, params: Record<string, string>): Promise<T> {
@@ -60,22 +62,40 @@ export function toSearchResult(f: PodcastIndexFeed): PodcastSearchResult {
     rssUrl: f.url,
     websiteUrl: f.link,
     episodeCount: f.episodeCount ?? null,
+    itunesId: f.itunesId ?? null,
   };
 }
 
-export async function searchPodcasts(term: string): Promise<PodcastSearchResult[]> {
-  const data = await call<{ feeds: PodcastIndexFeed[] }>("/search/byterm", {
-    q: term,
-    max: "20",
-  });
-  return (data.feeds ?? []).map(toSearchResult);
-}
-
-export async function getPodcastById(id: number): Promise<PodcastSearchResult | null> {
-  const data = await call<{ feed: PodcastIndexFeed | [] }>("/podcasts/byfeedid", {
-    id: String(id),
-  });
+async function getPodcast(path: string, params: Record<string, string>): Promise<PodcastSearchResult | null> {
+  const data = await call<{ feed: PodcastIndexFeed | [] }>(path, params);
   // The API returns an empty array instead of an object when not found.
   if (!data.feed || Array.isArray(data.feed)) return null;
   return toSearchResult(data.feed);
+}
+
+export function getPodcastById(id: number) {
+  return getPodcast("/podcasts/byfeedid", { id: String(id) });
+}
+
+export function getPodcastByItunesId(itunesId: number) {
+  return getPodcast("/podcasts/byitunesid", { id: String(itunesId) });
+}
+
+export function getPodcastByFeedUrl(url: string) {
+  return getPodcast("/podcasts/byfeedurl", { url });
+}
+
+export type RecentEpisode = { title: string; publishedAt: string | null; durationSeconds: number | null };
+
+/** Latest episodes of a show we don't store yet, for the preview page. */
+export async function getRecentEpisodesByItunesId(itunesId: number, max = 5): Promise<RecentEpisode[]> {
+  const data = await call<{ items?: { title: string; datePublished?: number; duration?: number }[] }>(
+    "/episodes/byitunesid",
+    { id: String(itunesId), max: String(max) },
+  );
+  return (data.items ?? []).map((e) => ({
+    title: e.title,
+    publishedAt: e.datePublished ? new Date(e.datePublished * 1000).toISOString() : null,
+    durationSeconds: e.duration || null,
+  }));
 }

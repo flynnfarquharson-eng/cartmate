@@ -10,3 +10,16 @@ export type TipRow = {
   category: string | null;
   timestamp_seconds: number | null;
 };
+
+/** Where someone found a show. Matches the check constraint in 002_discovery.sql. */
+export type RecSource = "claude" | "friends" | "chart" | "search" | "link";
+
+/** A show as shown in search results, recommendations and charts (Apple Podcasts data). */
+export type ShowSummary = {
+  itunesId: number;
+  title: string;
+  author: string;
+  imageUrl: string | null;
+  reason?: string | null;
+  latestEpisodeAt?: string | null;
+};

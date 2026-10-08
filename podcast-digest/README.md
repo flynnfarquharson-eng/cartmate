@@ -56,3 +56,15 @@ Open http://localhost:3000.
 - **Retries**: failed episodes are retried up to 3 times in total. Episodes stuck "in progress" for 15 minutes (e.g. a crashed run) are picked up again.
 - **Cost guard**: episodes longer than 4 hours are skipped.
 - Admins can trigger it from **Settings → Summarise next pending episodes**.
+
+## Discovery
+
+- **Welcome screen** (`/welcome`): interests plus up to 3 favourite shows, saved in `user_preferences`.
+- **Discover** (`/discover`): one search box that also accepts Apple Podcasts / Spotify show or episode links, then:
+  - **Picked for you**: Claude suggests shows, and each one is checked against Apple Podcasts (real name match, episode in the last 120 days) before it's shown. Generated once per set of preferences.
+  - **Popular with friends**: shows other users follow (already summarised, so free to add).
+  - **Top in Australia**: Apple's AU top charts for each interest.
+- **Preview** (`/podcast/[itunesId]`): show details, latest episodes and a sample summary if one exists.
+- Search, charts and verification use Apple's free directory (better ranking than Podcast Index). Podcast Index still supplies the RSS feed when someone follows.
+- Every suggestion shown and followed is logged in `recommendations`, and the admin section of Settings shows follow rates by source.
+- Needs `supabase/migrations/002_discovery.sql`.

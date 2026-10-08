@@ -3,12 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getPodcastById } from "@/lib/podcast-index";
+import { getPodcastByFeedUrl, getPodcastByItunesId } from "@/lib/podcast-index";
+import { lookupApple } from "@/lib/apple";
 import { pollPodcastById } from "@/lib/poll";
+import type { RecSource } from "@/lib/types";
 
 type ActionResult = { ok: true; podcastId: string } | { ok: false; error: string };
 
-export async function followPodcast(podcastIndexId: number): Promise<ActionResult> {
+/**
+ * Follow a show by its Apple Podcasts id. `source` records where the person found
+ * it (a recommendation, a chart, search...) so we can see which suggestions work.
+ */
+export async function followPodcast(itunesId: number, source: RecSource = "search"): Promise<ActionResult> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,8 +22,11 @@ export async function followPodcast(podcastIndexId: number): Promise<ActionResul
   if (!user) return { ok: false, error: "Please log in again." };
 
   // Look the show up ourselves rather than trusting data sent from the browser.
-  const show = await getPodcastById(podcastIndexId);
-  if (!show || !show.rssUrl) return { ok: false, error: "Couldn't find that podcast." };
+  // Podcast Index knows most shows by Apple id; otherwise match on the feed URL Apple lists.
+  let show = await getPodcastByItunesId(itunesId);
+  const apple = (await lookupApple([itunesId]))[0];
+  if (!show && apple?.feedUrl) show = await getPodcastByFeedUrl(apple.feedUrl);
+  if (!show || !show.rssUrl) return { ok: false, error: "Couldn't find that podcast's feed." };
 
   // One shared row per show, no matter how many people follow it.
   const admin = createAdminClient();
@@ -26,10 +35,11 @@ export async function followPodcast(podcastIndexId: number): Promise<ActionResul
     .upsert(
       {
         podcast_index_id: show.podcastIndexId,
+        itunes_id: itunesId,
         title: show.title,
         author: show.author,
         description: show.description,
-        image_url: show.imageUrl,
+        image_url: show.imageUrl || apple?.imageUrl || null,
         rss_url: show.rssUrl,
         website_url: show.websiteUrl,
       },
@@ -44,6 +54,20 @@ export async function followPodcast(podcastIndexId: number): Promise<ActionResul
     .upsert({ user_id: user.id, podcast_id: podcast.id }, { onConflict: "user_id,podcast_id" });
   if (followError) return { ok: false, error: followError.message };
 
+  // Measurement only: never let it block the follow.
+  await supabase.from("recommendations").upsert(
+    {
+      user_id: user.id,
+      itunes_id: itunesId,
+      source,
+      title: show.title,
+      author: show.author,
+      image_url: show.imageUrl || apple?.imageUrl || null,
+      followed_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,itunes_id,source" },
+  );
+
   // First time anyone has followed this show: grab its latest episodes right away.
   if (!podcast.import_after) {
     await pollPodcastById(podcast.id);
@@ -51,6 +75,7 @@ export async function followPodcast(podcastIndexId: number): Promise<ActionResul
 
   revalidatePath("/settings");
   revalidatePath("/feed");
+  revalidatePath("/discover");
   return { ok: true, podcastId: podcast.id };
 }
 
@@ -70,5 +95,6 @@ export async function unfollowPodcast(podcastId: string): Promise<ActionResult> 
 
   revalidatePath("/settings");
   revalidatePath("/feed");
+  revalidatePath("/discover");
   return { ok: true, podcastId };
 }
