@@ -90,6 +90,17 @@ export default async function SettingsPage() {
           >
             Check all feeds for new episodes now
           </a>
+          <a
+            href="/api/cron/process-episodes"
+            target="_blank"
+            className="ml-2 inline-block rounded-full border border-border bg-surface px-4 py-2 text-sm"
+          >
+            Summarise next pending episodes
+          </a>
+          <p className="mt-2 text-xs text-muted">
+            Summarising does 2 episodes per click and can take a few minutes. It costs money
+            (Deepgram + Claude) unless the show publishes its own transcript.
+          </p>
         </section>
       )}
     </div>

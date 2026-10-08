@@ -1,14 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isCronOrAdmin } from "@/lib/cron-auth";
-import { pollAllFollowedPodcasts } from "@/lib/poll";
+import { processPendingEpisodes } from "@/lib/process";
 
 // Give the job up to 5 minutes on Vercel.
 export const maxDuration = 300;
 
 /**
- * Checks every followed show for new episodes.
- * Called hourly by Vercel Cron (which sends "Authorization: Bearer <CRON_SECRET>").
- * The admin can also just open this URL in a browser while logged in.
+ * Transcribes and summarises the next few pending episodes.
+ * Each episode is processed once and shared by every follower of the show.
  */
 export async function GET(request: NextRequest) {
   if (!(await isCronOrAdmin(request))) {
@@ -16,11 +15,11 @@ export async function GET(request: NextRequest) {
   }
 
   const started = Date.now();
-  const results = await pollAllFollowedPodcasts();
+  const results = await processPendingEpisodes();
   return NextResponse.json({
-    checked: results.length,
-    newEpisodes: results.reduce((n, r) => n + r.newEpisodes, 0),
-    errors: results.filter((r) => r.error).length,
+    processed: results.filter((r) => r.status === "done").length,
+    failed: results.filter((r) => r.status === "failed").length,
+    skipped: results.filter((r) => r.status === "skipped").length,
     durationMs: Date.now() - started,
     results,
   });

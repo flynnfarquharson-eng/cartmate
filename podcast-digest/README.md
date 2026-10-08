@@ -9,7 +9,7 @@ Built with Next.js 16, Supabase, Podcast Index, Deepgram and Claude.
 ## Status
 
 - [x] **Phase 1** – login, podcast search, follow/unfollow, RSS polling that saves new episodes
-- [ ] Phase 2 – transcription + summarisation pipeline
+- [x] **Phase 2** – transcription + summarisation pipeline (needs `ANTHROPIC_API_KEY` + `DEEPGRAM_API_KEY`)
 - [ ] Phase 3 – feed of summaries, episode pages, tips library
 - [ ] Phase 4 – admin page, deployment to Vercel, hourly cron
 
@@ -46,3 +46,13 @@ Open http://localhost:3000.
 - **Follow a show** → the show is saved once in `podcasts` (shared by all users) and its 3 most recent episodes are imported as `pending`. Older back-catalogue episodes are skipped so we never pay to summarise hundreds of old episodes.
 - **Feed check** (`/api/cron/poll-feeds`) → downloads the RSS feed of every show that at least one person follows and saves new episodes as `pending`. It skips feeds that haven't changed, and the database rejects duplicate episodes, so it's safe to run as often as you like.
 - **Transcripts are private**: they live in a table that the browser can't read at all.
+
+## How it works (Phase 2)
+
+- **Summarise** (`/api/cron/process-episodes`) → takes the next 2 `pending` episodes from shows someone follows and runs each one through:
+  1. **Transcript**: uses the show's own transcript if the feed publishes one (free). Otherwise Deepgram transcribes the audio (about US$0.26 per hour of audio).
+  2. **Summary**: Claude writes an overview, key ideas, quotes with timestamps, resources mentioned and practical tips (roughly US$0.10-0.20 per hour-long episode).
+- **Never paid for twice**: each run claims an episode with an atomic update, so two runs can't process the same one. If summarising fails, the retry reuses the saved transcript instead of paying Deepgram again.
+- **Retries**: failed episodes are retried up to 3 times in total. Episodes stuck "in progress" for 15 minutes (e.g. a crashed run) are picked up again.
+- **Cost guard**: episodes longer than 4 hours are skipped.
+- Admins can trigger it from **Settings → Summarise next pending episodes**.
