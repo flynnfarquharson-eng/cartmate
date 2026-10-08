@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/poll-feeds",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron/process-episodes",
+      "schedule": "15 19 * * *"
+    }
+  ],
+  "regions": [
+    "hnd1"
+  ]
+}
