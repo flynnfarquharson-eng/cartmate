@@ -44,7 +44,10 @@ async function findCandidates(db: Db, limit: number): Promise<EpisodeRow[]> {
   // Only spend money on shows someone still follows.
   const { data: follows, error: followsError } = await db.from("user_follows").select("podcast_id");
   if (followsError) throw new Error(followsError.message);
-  const followed = [...new Set((follows ?? []).map((f) => f.podcast_id as string))];
+  // Skip shows whose creators asked us to stop.
+  const { data: optouts } = await db.from("creator_optouts").select("podcast_id");
+  const blocked = new Set((optouts ?? []).map((o) => o.podcast_id as string));
+  const followed = [...new Set((follows ?? []).map((f) => f.podcast_id as string))].filter((id) => !blocked.has(id));
   if (!followed.length) return [];
 
   const staleBefore = new Date(Date.now() - STALE_AFTER_MS).toISOString();

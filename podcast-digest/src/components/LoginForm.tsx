@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, cta = "Email me a login link" }: { next?: string; cta?: string }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -31,8 +31,8 @@ export function LoginForm({ next }: { next?: string }) {
       <div className="rounded-2xl border border-border bg-surface p-5 text-center">
         <p className="font-medium">Check your inbox</p>
         <p className="mt-1 text-sm text-muted">
-          We sent a login link to <span className="text-text">{email}</span>. Open it on this
-          device.
+          We sent a link to <span className="text-text">{email}</span>. Tap it on this device to
+          confirm and pick your shows.
         </p>
       </div>
     );
@@ -55,7 +55,7 @@ export function LoginForm({ next }: { next?: string }) {
         disabled={state === "sending"}
         className="w-full rounded-xl bg-accent px-4 py-3 font-medium text-white disabled:opacity-60 dark:text-black"
       >
-        {state === "sending" ? "Sending…" : "Email me a login link"}
+        {state === "sending" ? "Sending…" : cta}
       </button>
       {state === "error" && <p className="text-sm text-red-600">{message}</p>}
     </form>

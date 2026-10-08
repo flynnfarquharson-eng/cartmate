@@ -5,6 +5,7 @@ import { PodcastArt } from "@/components/PodcastArt";
 import { UnfollowButton } from "@/components/FollowButton";
 import { timeAgo } from "@/lib/format";
 import { RecommendationStats } from "@/components/RecommendationStats";
+import { DigestSettings } from "@/components/DigestSettings";
 
 export const metadata = { title: "Settings · Podcast Digest" };
 
@@ -30,6 +31,10 @@ export default async function SettingsPage() {
     .select("podcast_id, podcasts(title, author, image_url, last_checked_at, last_check_error)")
     .order("created_at", { ascending: false });
   const follows = (data ?? []) as unknown as FollowRow[];
+  const { data: subscription } = await supabase
+    .from("newsletter_subscriptions")
+    .select("frequency")
+    .maybeSingle();
 
   return (
     <div className="space-y-8">
@@ -49,6 +54,11 @@ export default async function SettingsPage() {
             <button className="text-sm text-accent">Log out</button>
           </form>
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Email digest</h2>
+        <DigestSettings frequency={(subscription?.frequency as "weekly" | "daily" | "off") ?? "weekly"} />
       </section>
 
       <section>
@@ -104,6 +114,13 @@ export default async function SettingsPage() {
             className="ml-2 inline-block rounded-full border border-border bg-surface px-4 py-2 text-sm"
           >
             Summarise next pending episodes
+          </a>
+          <a
+            href="/api/cron/send-digests"
+            target="_blank"
+            className="ml-2 mt-2 inline-block rounded-full border border-border bg-surface px-4 py-2 text-sm"
+          >
+            Send due digests now
           </a>
           <p className="mt-2 text-xs text-muted">
             Summarising does 2 episodes per click and can take a few minutes. It costs money

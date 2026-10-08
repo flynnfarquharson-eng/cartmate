@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { ensureSubscription } from "@/lib/digest";
 
 /** The magic link in the login email brings you here. */
 export async function GET(request: NextRequest) {
@@ -25,5 +26,13 @@ export async function GET(request: NextRequest) {
   if (error) {
     return NextResponse.redirect(`${origin}/?error=link`);
   }
+
+  // Signing up (the landing page says so) means agreeing to the weekly digest.
+  // Clicking the emailed link confirms the address, which doubles as opt-in.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) await ensureSubscription(user.id, "signup");
+
   return NextResponse.redirect(`${origin}${next}`);
 }

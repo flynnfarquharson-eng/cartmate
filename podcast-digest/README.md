@@ -68,3 +68,12 @@ Open http://localhost:3000.
 - Search, charts and verification use Apple's free directory (better ranking than Podcast Index). Podcast Index still supplies the RSS feed when someone follows.
 - Every suggestion shown and followed is logged in `recommendations`, and the admin section of Settings shows follow rates by source.
 - Needs `supabase/migrations/002_discovery.sql`.
+
+## Newsletter
+
+- Anyone can sign up on the landing page with just an email. Confirming the emailed link is the opt-in, and creates a `newsletter_subscriptions` row (weekly by default).
+- `/api/cron/send-digests` runs every morning (7am Sydney in summer). Weekly subscribers get theirs on Sunday, daily ones each day there's something new. Each email holds up to 10 episodes summarised since the last one, with the overview, top 2 tips, one short quote, and links to the full summary and the original episode. `digest_sends` records what was sent so nothing repeats.
+- Spam Act basics: sender name and contact in every email, one-click unsubscribe (`List-Unsubscribe` headers plus `/unsubscribe`), consent recorded.
+- `/privacy` and `/creators` pages. Shows in `creator_optouts` are never summarised or emailed.
+- Sending uses Resend: set `RESEND_API_KEY`, `EMAIL_FROM` (on a verified domain), `APP_URL` and optionally `CONTACT_EMAIL`. Settings has "Email me a preview now".
+- Needs `supabase/migrations/003_newsletter.sql`.
