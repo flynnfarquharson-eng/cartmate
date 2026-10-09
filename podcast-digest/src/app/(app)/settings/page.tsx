@@ -6,6 +6,7 @@ import { UnfollowButton } from "@/components/FollowButton";
 import { timeAgo } from "@/lib/format";
 import { RecommendationStats } from "@/components/RecommendationStats";
 import { DigestSettings } from "@/components/DigestSettings";
+import { AppSettings } from "@/components/AppSettings";
 
 export const metadata = { title: "Settings · Podcast Digest" };
 
@@ -54,6 +55,11 @@ export default async function SettingsPage() {
             <button className="text-sm text-accent">Log out</button>
           </form>
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">App</h2>
+        <AppSettings />
       </section>
 
       <section>

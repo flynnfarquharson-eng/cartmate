@@ -53,5 +53,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Run on pages, but not on static files, images or API routes.
-  matcher: ["/((?!_next/static|_next/image|api/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|api/|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

@@ -7,6 +7,9 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Podcast Digest",
   description: "AI summaries and actionable tips from the podcasts you love.",
+  // iPhone home-screen app: full screen, own name and icon.
+  appleWebApp: { capable: true, title: "Digest", statusBarStyle: "default" },
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

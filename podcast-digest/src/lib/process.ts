@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getTranscript, formatForSummary, type Segment, type Transcript } from "@/lib/transcript";
 import { summariseEpisode } from "@/lib/summarise";
+import { notifySummaryReady } from "@/lib/push";
 
 /** Episodes handled per run. Each can take 1-3 minutes, and a run gets 5 minutes. */
 const BATCH_SIZE = 2;
@@ -156,6 +157,18 @@ async function processEpisode(db: Db, episode: EpisodeRow): Promise<ProcessResul
       .from("episodes")
       .update({ status: "done", processed_at: new Date().toISOString(), error: null })
       .eq("id", episode.id);
+
+    // A notification is nice to have; never let it turn a finished summary into a failure.
+    try {
+      await notifySummaryReady({
+        id: episode.id,
+        title: episode.title,
+        podcastId: episode.podcast_id,
+        podcastTitle: episode.podcasts?.title ?? "",
+      });
+    } catch (err) {
+      console.error("[process] notification failed:", err);
+    }
     return { ...result, status: "done" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
