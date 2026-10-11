@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { ensureSubscription } from "@/lib/digest";
+import { recordSignupSource } from "@/lib/tracking";
 
 /** The magic link in the login email brings you here. */
 export async function GET(request: NextRequest) {
@@ -32,7 +33,10 @@ export async function GET(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) await ensureSubscription(user.id, "signup");
+  if (user) {
+    await ensureSubscription(user.id, "signup");
+    await recordSignupSource(user.id, request.cookies.get("pd_src")?.value);
+  }
 
   return NextResponse.redirect(`${origin}${next}`);
 }

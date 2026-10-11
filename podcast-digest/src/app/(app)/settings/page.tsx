@@ -4,9 +4,9 @@ import { isAdminEmail } from "@/lib/env";
 import { PodcastArt } from "@/components/PodcastArt";
 import { UnfollowButton } from "@/components/FollowButton";
 import { timeAgo } from "@/lib/format";
-import { RecommendationStats } from "@/components/RecommendationStats";
 import { DigestSettings } from "@/components/DigestSettings";
 import { AppSettings } from "@/components/AppSettings";
+import { FoundingOffer } from "@/components/FoundingOffer";
 
 export const metadata = { title: "Settings · Podcast Digest" };
 
@@ -56,6 +56,12 @@ export default async function SettingsPage() {
           </form>
         </div>
       </section>
+
+      {user && (
+        <section>
+          <FoundingOffer email={user.email ?? ""} userId={user.id} placement="settings" />
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">App</h2>
@@ -107,6 +113,13 @@ export default async function SettingsPage() {
       {isAdminEmail(user?.email) && (
         <section>
           <h2 className="mb-3 text-lg font-semibold">Admin</h2>
+          <Link
+            href="/admin"
+            className="mb-3 flex items-center justify-between rounded-2xl border border-border bg-surface p-4"
+          >
+            <span>Dashboard: sign-ups, tests, costs, Instagram carousels</span>
+            <span className="text-sm text-accent">Open →</span>
+          </Link>
           <a
             href="/api/cron/poll-feeds"
             target="_blank"
@@ -132,8 +145,7 @@ export default async function SettingsPage() {
             Summarising does 2 episodes per click and can take a few minutes. It costs money
             (Deepgram + Claude) unless the show publishes its own transcript.
           </p>
-          <h3 className="mb-2 mt-6 font-semibold">Which suggestions work</h3>
-          <RecommendationStats />
+
         </section>
       )}
     </div>

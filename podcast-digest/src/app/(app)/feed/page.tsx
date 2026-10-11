@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PodcastArt } from "@/components/PodcastArt";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDuration, timeAgo } from "@/lib/format";
+import { FoundingOffer } from "@/components/FoundingOffer";
 
 export const metadata = { title: "Feed · Podcast Digest" };
 
@@ -26,6 +27,9 @@ function overviewOf(e: EpisodeRow): string | null {
 
 export default async function FeedPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data: follows } = await supabase.from("user_follows").select("podcast_id");
   const ids = (follows ?? []).map((f) => f.podcast_id);
 
@@ -97,6 +101,12 @@ export default async function FeedPage() {
           );
         })}
       </ul>
+      {/* Show the founding offer once someone has a few summaries to judge the product by. */}
+      {user && episodes.filter((e) => overviewOf(e)).length >= 3 && (
+        <div className="mt-6">
+          <FoundingOffer email={user.email ?? ""} userId={user.id} placement="feed" />
+        </div>
+      )}
       {!episodes.length && (
         <p className="mt-8 text-center text-sm text-muted">
           No episodes yet. New episodes appear here after the next feed check.

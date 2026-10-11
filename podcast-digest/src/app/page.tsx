@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/LoginForm";
 import { PodcastArt } from "@/components/PodcastArt";
+import { AppStoreTeaser } from "@/components/AppStoreTeaser";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type Sample = {
@@ -74,6 +75,8 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
         </Link>
         . Already signed up? Enter your email to log in.
       </p>
+
+      <AppStoreTeaser />
 
       {sample && (
         <section className="mt-10">
