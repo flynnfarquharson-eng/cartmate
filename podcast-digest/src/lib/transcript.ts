@@ -44,7 +44,7 @@ export async function getTranscript(episode: EpisodeForTranscript): Promise<Tran
 
 async function fetchFeedTranscript(url: string, type: string | null): Promise<Transcript> {
   const res = await fetch(url, {
-    headers: { "User-Agent": "PodcastDigest/0.1" },
+    headers: { "User-Agent": "Podie/0.1" },
     signal: AbortSignal.timeout(30_000),
     cache: "no-store",
   });

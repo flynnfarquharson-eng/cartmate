@@ -110,13 +110,13 @@ export function renderDigest({
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f7f7f5"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background:#ffffff;border-radius:16px">
 <tr><td style="padding:28px 24px 8px">
-  <p style="margin:0;font-size:13px;font-weight:600;color:#6d28d9">Podcast Digest</p>
+  <p style="margin:0;font-size:13px;font-weight:600;color:#6d28d9">Podie</p>
   <p style="margin:6px 0 0;font-size:22px;font-weight:700;color:#1c1c1e">${esc(intro)}</p>
 </td></tr>
 <tr><td style="padding:0 24px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%">${blocks.join("")}</table></td></tr>
 <tr><td style="padding:20px 24px 28px;border-top:1px solid #e6e6e3;font-size:12px;line-height:1.6;color:#6b6b70">
   Summaries are written by AI from each show's public episodes. All credit goes to the creators, so please listen to the full episodes.<br><br>
-  You're getting this because you signed up for Podcast Digest.
+  You're getting this because you signed up for Podie.
   <a href="${links.settings}" style="color:#6b6b70">Change shows or frequency</a> ·
   <a href="${links.unsubscribe}" style="color:#6b6b70">Unsubscribe</a> ·
   <a href="${links.privacy}" style="color:#6b6b70">Privacy</a><br>

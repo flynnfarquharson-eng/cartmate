@@ -7,7 +7,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-10 border-b border-border bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <Link href="/feed" className="font-semibold tracking-tight">
-            Podcast Digest
+            Podie
           </Link>
           <div className="hidden sm:block">
             <TabBar />

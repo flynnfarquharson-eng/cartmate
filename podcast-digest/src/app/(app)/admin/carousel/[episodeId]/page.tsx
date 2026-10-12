@@ -4,7 +4,7 @@ import { getUser } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/env";
 import { carouselCaption, getCarouselData } from "@/lib/carousel";
 
-export const metadata = { title: "Carousel · Podcast Digest" };
+export const metadata = { title: "Carousel · Podie" };
 
 export default async function CarouselPage({ params }: PageProps<"/admin/carousel/[episodeId]">) {
   const user = await getUser();

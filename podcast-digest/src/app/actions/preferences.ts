@@ -18,7 +18,7 @@ export async function savePreferences(formData: FormData): Promise<{ error: stri
     .getAll("favourite")
     .map((f) => String(f).trim().slice(0, 100))
     .filter(Boolean)
-    .slice(0, 3);
+    .slice(0, 6);
   if (!interests.length && !favouriteShows.length) {
     return { error: "Pick at least one interest or name a show you love." };
   }

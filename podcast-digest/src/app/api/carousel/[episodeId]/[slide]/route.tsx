@@ -34,7 +34,7 @@ function Frame({ children, footer }: { children: React.ReactNode; footer: string
         <div style={{ width: 44, height: 44, borderRadius: 12, background: PURPLE, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ width: 16, height: 16, borderRadius: 8, background: "#fff" }} />
         </div>
-        Podcast Digest
+        Podie
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>{children}</div>
       <div style={{ display: "flex", fontSize: 26, color: "#6b6b70" }}>{footer}</div>

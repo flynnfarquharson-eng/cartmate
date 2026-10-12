@@ -3,6 +3,10 @@ import { LoginForm } from "@/components/LoginForm";
 import { PodcastArt } from "@/components/PodcastArt";
 import { AppStoreTeaser } from "@/components/AppStoreTeaser";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getPopularShows, shortTitle } from "@/lib/popular";
+
+/** The example on the landing page: Founders on Sam Walton, whose tips suit anyone in business. */
+const SAMPLE_EPISODE_ID = "59d2d762-ec89-4e2f-aafe-0ac7a0da548c";
 
 type Sample = {
   title: string;
@@ -12,16 +16,16 @@ type Sample = {
   tips: string[];
 };
 
-/** The latest summarised episode, shown as an example of what's in the email. */
+/** An example of what's in the email. */
 async function getSample(): Promise<Sample | null> {
   try {
-    const { data } = await createAdminClient()
-      .from("episodes")
-      .select("title, podcasts(title, image_url), summaries(overview), tips(tip_text)")
-      .eq("status", "done")
-      .order("processed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const db = createAdminClient();
+    const columns = "title, podcasts(title, image_url), summaries(overview), tips(tip_text)";
+    let { data } = await db.from("episodes").select(columns).eq("id", SAMPLE_EPISODE_ID).eq("status", "done").maybeSingle();
+    // If the pinned episode is ever gone, fall back to the latest summary.
+    if (!data) {
+      ({ data } = await db.from("episodes").select(columns).eq("status", "done").order("processed_at", { ascending: false }).limit(1).maybeSingle());
+    }
     if (!data) return null;
     const podcast = data.podcasts as unknown as { title: string; image_url: string | null } | null;
     const summaryRaw = data.summaries as unknown as { overview: string } | { overview: string }[] | null;
@@ -33,7 +37,11 @@ async function getSample(): Promise<Sample | null> {
       podcastTitle: podcast?.title ?? "",
       imageUrl: podcast?.image_url ?? null,
       overview: firstSentences,
-      tips: ((data.tips as unknown as { tip_text: string }[]) ?? []).slice(0, 2).map((t) => t.tip_text),
+      // The shortest tips read best in a preview.
+      tips: ((data.tips as unknown as { tip_text: string }[]) ?? [])
+        .map((t) => t.tip_text)
+        .sort((a, b) => a.length - b.length)
+        .slice(0, 3),
     };
   } catch {
     return null; // the page still works without a sample
@@ -44,21 +52,45 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const next = typeof params.next === "string" ? params.next : undefined;
   const linkError = params.error === "link";
-  const sample = await getSample();
+  const [sample, popular] = await Promise.all([getSample(), getPopularShows()]);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-12">
       <div className="mb-8">
-        <div className="mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-accent text-2xl text-white dark:text-black">
-          ◉
+        <div className="mb-8 flex items-center gap-2.5">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-lg text-white dark:text-black" aria-hidden>
+            ◉
+          </div>
+          <span className="text-xl font-semibold tracking-tight">Podie</span>
         </div>
-        <h1 className="text-3xl font-semibold leading-tight tracking-tight">
-          Your favourite podcasts, summarised. Every Sunday.
-        </h1>
+        <h1 className="text-3xl font-semibold leading-tight tracking-tight">Remember what you learn from podcasts.</h1>
         <p className="mt-3 text-muted">
-          Pick the shows you love. Every Sunday morning you&apos;ll get a 3-minute email with the key
-          ideas and best tips from each new episode, with links to listen to the moments that matter.
+          The key ideas and best tips from the business and self-improvement shows you love, in a 3-minute email every
+          Sunday. Tap any tip to hear the exact moment it was said.
         </p>
+        {popular.length > 0 && (
+          <div className="mt-5 flex items-center gap-3">
+            <div className="flex shrink-0 -space-x-2.5">
+              {popular.slice(0, 5).map((show) => (
+                // eslint-disable-next-line @next/next/no-img-element -- artwork comes from many hosts
+                <img
+                  key={show.itunesId}
+                  src={show.imageUrl ?? ""}
+                  alt={shortTitle(show.title)}
+                  title={shortTitle(show.title)}
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 shrink-0 rounded-lg border-2 border-bg object-cover"
+                />
+              ))}
+            </div>
+            <p className="min-w-0 text-xs leading-snug text-muted">
+              {popular.slice(0, 2).map((s) => shortTitle(s.title)).join(", ")}
+              <br />
+              and almost any other show
+            </p>
+          </div>
+        )}
       </div>
 
       {linkError && (
@@ -80,7 +112,7 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
 
       {sample && (
         <section className="mt-10">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">From a recent digest</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">What you get, for every episode</p>
           <div className="rounded-2xl border border-border bg-surface p-4">
             <div className="flex gap-3">
               <PodcastArt src={sample.imageUrl} alt={sample.podcastTitle} size={44} />
@@ -104,10 +136,21 @@ export default async function Landing({ searchParams }: PageProps<"/">) {
         </section>
       )}
 
-      <ul className="mt-8 space-y-2 text-sm text-muted">
-        <li>• Works with almost any podcast, including Australian shows</li>
-        <li>• Tell us what you&apos;re into and we&apos;ll suggest shows</li>
-        <li>• Prefer an app? Read every summary and save tips at any time</li>
+      <ul className="mt-8 space-y-3 text-sm">
+        {[
+          ["Keep what you learn", "Save the best tips to your library and find them again in seconds."],
+          ["Hear the moment", "Tap any tip or quote to play that exact part of the episode."],
+          ["Catch up on anything", "Get any past episode summarised in about a minute."],
+        ].map(([title, text]) => (
+          <li key={title} className="flex gap-3">
+            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent-soft text-[11px] font-bold text-accent" aria-hidden>
+              ✓
+            </span>
+            <span>
+              <span className="font-medium">{title}.</span> <span className="text-muted">{text}</span>
+            </span>
+          </li>
+        ))}
       </ul>
     </main>
   );

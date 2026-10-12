@@ -8,7 +8,7 @@ import { DigestSettings } from "@/components/DigestSettings";
 import { AppSettings } from "@/components/AppSettings";
 import { FoundingOffer } from "@/components/FoundingOffer";
 
-export const metadata = { title: "Settings · Podcast Digest" };
+export const metadata = { title: "Settings · Podie" };
 
 type FollowRow = {
   podcast_id: string;

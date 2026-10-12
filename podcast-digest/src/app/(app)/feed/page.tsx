@@ -8,7 +8,7 @@ import { AutoRefresh } from "@/components/AutoRefresh";
 import { formatDuration, timeAgo } from "@/lib/format";
 import { FoundingOffer } from "@/components/FoundingOffer";
 
-export const metadata = { title: "Feed · Podcast Digest" };
+export const metadata = { title: "Feed · Podie" };
 
 type EpisodeRow = {
   id: string;

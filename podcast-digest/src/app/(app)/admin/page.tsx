@@ -6,7 +6,7 @@ import { isAdminEmail } from "@/lib/env";
 import { RecommendationStats } from "@/components/RecommendationStats";
 import { timeAgo } from "@/lib/format";
 
-export const metadata = { title: "Admin · Podcast Digest" };
+export const metadata = { title: "Admin · Podie" };
 
 // Rough per-unit costs (USD) for the cost estimate below.
 const CLAUDE_PER_EPISODE = 0.06;

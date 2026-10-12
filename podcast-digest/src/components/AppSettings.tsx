@@ -90,7 +90,7 @@ export function AppSettings() {
     <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
       {!env.standalone && (
         <div>
-          <p className="font-medium">Add Podcast Digest to your home screen</p>
+          <p className="font-medium">Add Podie to your home screen</p>
           <p className="mt-1 text-sm text-muted">
             {env.ios ? (
               <>

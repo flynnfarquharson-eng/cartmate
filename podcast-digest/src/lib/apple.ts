@@ -43,7 +43,7 @@ function toShow(r: AppleResult): AppleShow {
 
 async function getJson<T>(url: string, revalidateSeconds: number): Promise<T> {
   const res = await fetch(url, {
-    headers: { "User-Agent": "PodcastDigest/0.1" },
+    headers: { "User-Agent": "Podie/0.1" },
     signal: AbortSignal.timeout(10_000),
     next: { revalidate: revalidateSeconds },
   });
@@ -148,7 +148,7 @@ export async function resolveShowLink(input: string): Promise<AppleShow | null> 
     // Spotify's oEmbed gives the latest episode's title, not the show's, so read the
     // show page's og:title instead. Short spotify.link URLs redirect to the show page.
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; PodcastDigest/0.1)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Podie/0.1)" },
       redirect: "follow",
       signal: AbortSignal.timeout(10_000),
     });

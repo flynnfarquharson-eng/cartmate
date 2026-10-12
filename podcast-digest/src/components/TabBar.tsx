@@ -17,6 +17,8 @@ const TABS = [
 
 export function TabBar() {
   const pathname = usePathname();
+  // Keep new people on the sign-up steps until they've picked their shows.
+  if (pathname === "/welcome") return null;
   return (
     <nav className="fixed bottom-0 inset-x-0 z-20 border-t border-border bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)] sm:static sm:border-0 sm:bg-transparent sm:pb-0">
       <ul className="mx-auto flex max-w-2xl justify-around sm:justify-end sm:gap-1">

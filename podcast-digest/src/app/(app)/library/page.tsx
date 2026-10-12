@@ -6,7 +6,7 @@ import { SummaryProgress, isInProgress } from "@/components/SummaryProgress";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { formatDuration, timeAgo } from "@/lib/format";
 
-export const metadata = { title: "Library · Podcast Digest" };
+export const metadata = { title: "Library · Podie" };
 
 /** Summaries listed per show before "See all". */
 const PER_SHOW = 5;

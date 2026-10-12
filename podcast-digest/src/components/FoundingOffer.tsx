@@ -42,7 +42,7 @@ export function FoundingOffer({ email, userId, placement }: { email: string; use
     <div className="rounded-2xl border border-accent bg-accent-soft p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-accent">Founding members</p>
       <p className="mt-1 text-lg font-semibold">
-        Podcast Digest Pro: {FOUNDING_PRICE}/month{" "}
+        Podie Pro: {FOUNDING_PRICE}/month{" "}
         <span className="text-sm font-normal text-muted line-through">{REGULAR_PRICE}</span>
       </p>
       <ul className="mt-2 space-y-1 text-sm">

@@ -79,7 +79,7 @@ export async function PickedForYou({
   );
 }
 
-/** Shows other people on Podcast Digest follow. They're already summarised, so free to add. */
+/** Shows other people on Podie follow. They're already summarised, so free to add. */
 export async function PopularWithFriends({ userId, followed }: { userId: string; followed: FollowedShows }) {
   // Counting across everyone needs the admin client (each user can only see their own follows).
   // Only show names and counts leave this function, never who follows what.

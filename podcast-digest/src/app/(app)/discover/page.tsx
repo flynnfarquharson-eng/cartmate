@@ -3,9 +3,10 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getFollowedShows } from "@/lib/follows";
 import { SearchClient } from "@/components/SearchClient";
+import { genreFor } from "@/lib/interests";
 import { PickedForYou, PopularWithFriends, ShelfSkeleton, TopChart, type Preferences } from "./sections";
 
-export const metadata = { title: "Discover · Podcast Digest" };
+export const metadata = { title: "Discover · Podie" };
 // "Picked for you" can take ~15 seconds the first time (Claude + checking each show),
 // and following a new show summarises its latest episode in the background.
 export const maxDuration = 300;
@@ -21,8 +22,9 @@ export default async function DiscoverPage() {
   ]);
   const prefs = prefsData as Preferences | null;
   const userId = user!.id; // the proxy only lets logged-in users reach this page
-  // Up to 3 interest charts; with no interests, the overall Australian chart.
-  const chartInterests = prefs?.interests.length ? prefs.interests.slice(0, 3) : [null];
+  // Up to 3 interest charts (only topics we still offer); otherwise business and self-improvement.
+  const known = (prefs?.interests ?? []).filter((i) => genreFor(i));
+  const chartInterests = known.length ? known.slice(0, 3) : ["Business", "Self-improvement"];
 
   return (
     <>

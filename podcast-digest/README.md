@@ -1,4 +1,4 @@
-# Podcast Digest
+# Podie
 
 Follow podcasts, get AI summaries of new episodes, and keep the best tips in a searchable library.
 

@@ -39,7 +39,7 @@ async function call<T>(path: string, params: Record<string, string>): Promise<T>
   const url = `${BASE}${path}?${new URLSearchParams(params)}`;
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "PodcastDigest/0.1",
+      "User-Agent": "Podie/0.1",
       "X-Auth-Key": key,
       "X-Auth-Date": authDate,
       Authorization: authorization,

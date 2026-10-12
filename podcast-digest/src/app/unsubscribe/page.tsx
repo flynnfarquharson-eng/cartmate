@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Unsubscribe · Podcast Digest" };
+export const metadata = { title: "Unsubscribe · Podie" };
 
 export default async function UnsubscribePage({ searchParams }: PageProps<"/unsubscribe">) {
   const params = await searchParams;

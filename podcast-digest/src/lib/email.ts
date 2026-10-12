@@ -2,7 +2,7 @@ import "server-only";
 import { requireEnv } from "@/lib/env";
 
 // Sends through Resend's REST API. Docs: https://resend.com/docs/api-reference/emails/send-email
-// EMAIL_FROM must be on a domain verified in Resend, e.g. "Podcast Digest <digest@yourdomain.com>".
+// EMAIL_FROM must be on a domain verified in Resend, e.g. "Podie <digest@yourdomain.com>".
 // Before a domain is verified, Resend only delivers "onboarding@resend.dev" mail to your own address.
 
 export type OutgoingEmail = {
@@ -21,7 +21,7 @@ export async function sendEmail(email: OutgoingEmail): Promise<{ id: string }> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM || "Podcast Digest <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM || "Podie <onboarding@resend.dev>",
       to: [email.to],
       subject: email.subject,
       html: email.html,

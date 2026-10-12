@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** Makes the site installable: "Add to Home Screen" gives an app icon that opens full screen. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Podcast Digest",
-    short_name: "Digest",
+    name: "Podie",
+    short_name: "Podie",
     description: "Summaries and the best tips from the podcasts you love.",
     start_url: "/feed",
     scope: "/",

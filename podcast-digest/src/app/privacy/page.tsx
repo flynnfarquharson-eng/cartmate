@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Privacy · Podcast Digest" };
+export const metadata = { title: "Privacy · Podie" };
 
 const contact = process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL || "";
 
@@ -8,14 +8,14 @@ export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12 leading-relaxed">
       <Link href="/" className="text-sm text-accent">
-        ← Podcast Digest
+        ← Podie
       </Link>
       <h1 className="mt-4 text-2xl font-semibold">Privacy</h1>
       <p className="mt-1 text-sm text-muted">Last updated 8 October 2026</p>
 
       <div className="mt-6 space-y-4 text-[15px]">
         <p>
-          Podcast Digest is run by Flynn Farquharson in Sydney, Australia. This page explains what we
+          Podie is run by Flynn Farquharson in Sydney, Australia. This page explains what we
           collect and why. In short: only what we need to send you summaries, and we never sell or share it.
         </p>
         <h2 className="pt-2 font-semibold">What we collect</h2>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
           Data is stored with Supabase (servers in Japan) and the site is hosted by Vercel. Emails are sent
           through Resend. Your interests and favourite shows, without your email, are sent to Anthropic&apos;s
           Claude to suggest podcasts. Podcast audio is transcribed by Deepgram. We use these services only to
-          run Podcast Digest.
+          run Podie.
         </p>
         <h2 className="pt-2 font-semibold">Your choices</h2>
         <ul className="list-disc space-y-1 pl-5">

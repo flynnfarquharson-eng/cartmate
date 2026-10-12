@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TipCard } from "@/components/TipCard";
 import type { TipRow } from "@/lib/types";
 
-export const metadata = { title: "Tips · Podcast Digest" };
+export const metadata = { title: "Tips · Podie" };
 
 type TipWithEpisode = TipRow & {
   episodes: { id: string; title: string; podcasts: { title: string } | null } | null;

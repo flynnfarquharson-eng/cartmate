@@ -13,7 +13,7 @@ const MAX_EPISODE_AGE_DAYS = 14;
 /** Who the email is from (Spam Act: identify the sender and how to contact them). */
 function senderLine() {
   const contact = process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL || "";
-  return `Podcast Digest is run by Flynn Farquharson, Sydney, Australia.${contact ? ` Contact: ${contact}` : ""}`;
+  return `Podie is run by Flynn Farquharson, Sydney, Australia.${contact ? ` Contact: ${contact}` : ""}`;
 }
 
 type Db = ReturnType<typeof createAdminClient>;

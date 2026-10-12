@@ -42,7 +42,7 @@ export async function pollPodcast(podcast: PodcastRow): Promise<PollResult> {
 
   try {
     const headers: Record<string, string> = {
-      "User-Agent": "PodcastDigest/0.1 (+RSS reader)",
+      "User-Agent": "Podie/0.1 (+RSS reader)",
       Accept: "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
     };
     if (!firstImport) {
@@ -171,7 +171,7 @@ export async function getFeedEpisodes(rssUrl: string): Promise<FeedEpisode[]> {
   const hit = feedCache.get(rssUrl);
   if (hit && Date.now() - hit.at < FEED_CACHE_MS) return hit.episodes;
   const res = await fetch(rssUrl, {
-    headers: { "User-Agent": "PodcastDigest/0.1 (+RSS reader)" },
+    headers: { "User-Agent": "Podie/0.1 (+RSS reader)" },
     signal: AbortSignal.timeout(20_000),
     cache: "no-store",
   });

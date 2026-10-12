@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "For podcast creators · Podcast Digest" };
+export const metadata = { title: "For podcast creators · Podie" };
 
 const contact = process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL || "";
 
@@ -12,12 +12,12 @@ export default function CreatorsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12 leading-relaxed">
       <Link href="/" className="text-sm text-accent">
-        ← Podcast Digest
+        ← Podie
       </Link>
       <h1 className="mt-4 text-2xl font-semibold">For podcast creators</h1>
       <div className="mt-6 space-y-4 text-[15px]">
         <p>
-          Podcast Digest sends listeners short summaries of new episodes from shows they follow. Every
+          Podie sends listeners short summaries of new episodes from shows they follow. Every
           summary credits your show and links to the full episode, and audio always plays from your own
           host, so your downloads are counted as normal. We only use publicly available episodes.
         </p>
