@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/feed", label: "Feed", icon: "M4 6h16M4 12h16M4 18h10" },
+  { href: "/library", label: "Library", icon: "M5 4v16M10 4v16M15 4.5l4 15" },
   { href: "/tips", label: "Tips", icon: "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z" },
   { href: "/discover", label: "Discover", icon: "M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm10 2-4.35-4.35" },
   {
@@ -25,7 +26,7 @@ export function TabBar() {
             <li key={tab.href}>
               <Link
                 href={tab.href}
-                className={`flex flex-col items-center gap-0.5 px-5 py-2 text-[11px] sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:py-1.5 sm:text-sm ${
+                className={`flex flex-col items-center gap-0.5 px-3 py-2 text-[11px] sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:py-1.5 sm:text-sm ${
                   active ? "text-accent sm:bg-accent-soft" : "text-muted hover:text-text"
                 }`}
               >

@@ -27,7 +27,7 @@ function rememberSource(request: NextRequest, response: NextResponse) {
 }
 
 // Pages that need you to be logged in.
-const PROTECTED = ["/feed", "/search", "/discover", "/welcome", "/podcast", "/settings", "/tips", "/episode", "/admin"];
+const PROTECTED = ["/feed", "/library", "/search", "/discover", "/welcome", "/podcast", "/settings", "/tips", "/episode", "/admin"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PodcastArt } from "@/components/PodcastArt";
 import { StatusBadge } from "@/components/StatusBadge";
+import { SummaryProgress, isInProgress } from "@/components/SummaryProgress";
+import { AutoRefresh } from "@/components/AutoRefresh";
+import { GetSummaryButton } from "@/components/GetSummaryButton";
+import { MAX_ATTEMPTS } from "@/lib/process";
 import { TipCard } from "@/components/TipCard";
 import { EpisodeAudio, Timestamp } from "@/components/Timestamp";
 import { formatDuration, timeAgo } from "@/lib/format";
@@ -17,8 +21,13 @@ type EpisodeRow = {
   audio_url: string | null;
   episode_url: string | null;
   status: string;
-  podcasts: { title: string; image_url: string | null } | null;
+  guid: string;
+  attempts: number;
+  podcasts: { title: string; image_url: string | null; itunes_id: number | null } | null;
 };
+
+// "Get summary now" summarises in the background.
+export const maxDuration = 300;
 
 type SummaryRow = {
   overview: string;
@@ -45,7 +54,7 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
     await Promise.all([
       supabase
         .from("episodes")
-        .select("id, title, description, published_at, duration_seconds, audio_url, episode_url, status, podcasts(title, image_url)")
+        .select("id, title, description, published_at, duration_seconds, audio_url, episode_url, status, guid, attempts, podcasts(title, image_url, itunes_id)")
         .eq("id", id)
         .maybeSingle(),
       supabase
@@ -100,13 +109,28 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
       )}
 
       {!summary ? (
-        <div className="mt-8 rounded-2xl border border-border bg-surface p-5 text-center">
-          <StatusBadge status={episode.status} />
-          <p className="mt-2 text-sm text-muted">
-            {episode.status === "failed"
-              ? "We couldn't summarise this episode."
-              : "The summary isn't ready yet. Check back soon."}
-          </p>
+        <div className="mt-8 rounded-2xl border border-border bg-surface p-5">
+          <AutoRefresh active={isInProgress(episode.status)} />
+          {isInProgress(episode.status) ? (
+            <>
+              <SummaryProgress status={episode.status} />
+              <p className="mt-3 text-sm text-muted">This page updates by itself when the summary is ready.</p>
+            </>
+          ) : episode.status === "failed" && episode.attempts >= MAX_ATTEMPTS ? (
+            <p className="text-center text-sm text-muted">We couldn&apos;t summarise this episode.</p>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <StatusBadge status={episode.status} />
+                <p className="mt-1 text-sm text-muted">Don&apos;t want to wait? Get it now, it takes about a minute.</p>
+              </div>
+              {episode.podcasts?.itunes_id && (
+                <div className="shrink-0">
+                  <GetSummaryButton itunesId={episode.podcasts.itunes_id} guid={episode.guid} label="Get it now" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <>

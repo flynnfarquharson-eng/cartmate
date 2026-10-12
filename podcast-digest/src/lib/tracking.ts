@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /** Events the test buttons can record. Anything else is rejected. */
 export const TRACKED_EVENTS = ["app_store_click", "founding_offer_view", "founding_offer_click", "carousel_download"] as const;
 export type TrackedEvent = (typeof TRACKED_EVENTS)[number];
+/** Events only the server records (never accepted from the browser). */
+type ServerEvent = "summary_request";
 
 /** Save where someone came from, the first time they log in. Never overwrites. */
 export async function recordSignupSource(userId: string, cookieValue: string | undefined) {
@@ -29,7 +31,7 @@ export async function recordSignupSource(userId: string, cookieValue: string | u
     );
 }
 
-export async function recordEvent(event: TrackedEvent, details: { userId?: string | null; anonId?: string | null; ref?: string | null; props?: Record<string, unknown> }) {
+export async function recordEvent(event: TrackedEvent | ServerEvent, details: { userId?: string | null; anonId?: string | null; ref?: string | null; props?: Record<string, unknown> }) {
   await createAdminClient()
     .from("product_events")
     .insert({

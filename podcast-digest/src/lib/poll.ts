@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { parseFeed } from "@/lib/rss";
+import { parseFeed, type FeedEpisode } from "@/lib/rss";
 
 /**
  * When someone follows a brand-new show, import only this many recent episodes.
@@ -160,4 +160,57 @@ export async function pollAllFollowedPodcasts(): Promise<PollResult[]> {
   });
   await Promise.all(workers);
   return results;
+}
+
+/** Feeds are big and change slowly, so keep each one in memory for a few minutes. */
+const FEED_CACHE_MS = 10 * 60 * 1000;
+const feedCache = new Map<string, { at: number; episodes: FeedEpisode[] }>();
+
+/** Every episode in a show's feed, newest first. Used to browse a show's back catalogue. */
+export async function getFeedEpisodes(rssUrl: string): Promise<FeedEpisode[]> {
+  const hit = feedCache.get(rssUrl);
+  if (hit && Date.now() - hit.at < FEED_CACHE_MS) return hit.episodes;
+  const res = await fetch(rssUrl, {
+    headers: { "User-Agent": "PodcastDigest/0.1 (+RSS reader)" },
+    signal: AbortSignal.timeout(20_000),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Feed returned HTTP ${res.status}`);
+  const episodes = parseFeed(await res.text()).sort(
+    (a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+  );
+  feedCache.set(rssUrl, { at: Date.now(), episodes });
+  return episodes;
+}
+
+/**
+ * Save one episode someone picked from a show's back catalogue (older than our
+ * import cut-off, so polling would never add it). Returns its id, new or existing.
+ */
+export async function importEpisode(podcastId: string, e: FeedEpisode): Promise<string> {
+  const db = createAdminClient();
+  const { error } = await db.from("episodes").upsert(
+    {
+      podcast_id: podcastId,
+      guid: e.guid,
+      title: e.title,
+      description: e.description,
+      episode_url: e.episodeUrl,
+      published_at: e.publishedAt?.toISOString() ?? null,
+      audio_url: e.audioUrl,
+      duration_seconds: e.durationSeconds,
+      feed_transcript_url: e.transcriptUrl,
+      feed_transcript_type: e.transcriptType,
+    },
+    { onConflict: "podcast_id,guid", ignoreDuplicates: true },
+  );
+  if (error) throw new Error(`Saving episode failed: ${error.message}`);
+  const { data, error: readError } = await db
+    .from("episodes")
+    .select("id")
+    .eq("podcast_id", podcastId)
+    .eq("guid", e.guid)
+    .single();
+  if (readError || !data) throw new Error("Saved episode not found");
+  return data.id;
 }

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PodcastArt } from "@/components/PodcastArt";
 import { StatusBadge } from "@/components/StatusBadge";
+import { SummaryProgress, isInProgress } from "@/components/SummaryProgress";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { formatDuration, timeAgo } from "@/lib/format";
 import { FoundingOffer } from "@/components/FoundingOffer";
 
@@ -64,6 +66,7 @@ export default async function FeedPage() {
   return (
     <>
       <h1 className="mb-4 text-2xl font-semibold tracking-tight">Latest episodes</h1>
+      <AutoRefresh active={episodes.some((e) => isInProgress(e.status))} />
       <ul className="space-y-3">
         {episodes.map((e) => {
           const overview = overviewOf(e);
@@ -92,8 +95,8 @@ export default async function FeedPage() {
                     </p>
                   </>
                 ) : (
-                  <div className="mt-2">
-                    <StatusBadge status={e.status} />
+                  <div className="mt-3">
+                    {isInProgress(e.status) ? <SummaryProgress status={e.status} /> : <StatusBadge status={e.status} />}
                   </div>
                 )}
               </Link>

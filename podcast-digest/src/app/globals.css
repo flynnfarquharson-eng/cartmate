@@ -38,3 +38,15 @@ body {
   color: var(--text);
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Moving stripe for "summary in progress" bars */
+@keyframes progress-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+.progress-slide {
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-slide { animation: none; }
+}

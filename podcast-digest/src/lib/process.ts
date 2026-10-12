@@ -7,11 +7,11 @@ import { notifySummaryReady } from "@/lib/push";
 /** Episodes handled per run. Each can take 1-3 minutes, and a run gets 5 minutes. */
 const BATCH_SIZE = 2;
 /** Give up on an episode after this many tries. */
-const MAX_ATTEMPTS = 3;
+export const MAX_ATTEMPTS = 3;
 /** An episode stuck "in progress" this long was abandoned by a crashed run. */
 const STALE_AFTER_MS = 15 * 60 * 1000;
 /** Cost guard: skip episodes longer than this (minutes) rather than pay to transcribe them. */
-const MAX_EPISODE_MINUTES = 240;
+export const MAX_EPISODE_MINUTES = 240;
 /**
  * Cost guard: never start more than this many episodes in 24 hours, across everyone.
  * At roughly US$0.15-0.45 each, 30 a day is at most ~US$13. Override with MAX_EPISODES_PER_DAY.

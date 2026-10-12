@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPodcastByFeedUrl, getPodcastByItunesId } from "@/lib/podcast-index";
 import { lookupApple } from "@/lib/apple";
-import { pollPodcastById } from "@/lib/poll";
-import { processPendingForPodcast } from "@/lib/process";
+import { getFeedEpisodes, importEpisode, pollPodcastById } from "@/lib/poll";
+import { MAX_ATTEMPTS, MAX_EPISODE_MINUTES, processEpisodeById, processPendingForPodcast } from "@/lib/process";
+import { recordEvent } from "@/lib/tracking";
 import type { RecSource } from "@/lib/types";
 
 type ActionResult = { ok: true; podcastId: string } | { ok: false; error: string };
@@ -89,6 +90,82 @@ export async function followPodcast(itunesId: number, source: RecSource = "searc
   revalidatePath("/feed");
   revalidatePath("/discover");
   return { ok: true, podcastId: podcast.id };
+}
+
+/** Back-catalogue summaries one person can ask for in 24 hours (each costs ~US$0.15-0.45). */
+const SUMMARY_REQUESTS_PER_DAY = 10;
+
+type SummaryResult = { ok: true; episodeId: string; ready: boolean } | { ok: false; error: string };
+
+/**
+ * Summarise one episode someone picked from a show's episode list. Follows the
+ * show first if needed, then summarises in the background (about a minute).
+ */
+export async function requestSummary(itunesId: number, guid: string): Promise<SummaryResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Please log in again." };
+
+  const admin = createAdminClient();
+  const { data: stored } = await admin.from("podcasts").select("id, rss_url").eq("itunes_id", itunesId).maybeSingle();
+  let podcast = stored;
+  const { data: follow } = podcast
+    ? await supabase.from("user_follows").select("podcast_id").eq("podcast_id", podcast.id).maybeSingle()
+    : { data: null };
+  if (!follow) {
+    const followed = await followPodcast(itunesId, "search");
+    if (!followed.ok) return followed;
+    const { data } = await admin.from("podcasts").select("id, rss_url").eq("id", followed.podcastId).single();
+    podcast = data;
+  }
+  if (!podcast) return { ok: false, error: "Couldn't find that podcast." };
+  const { data: optout } = await admin.from("creator_optouts").select("podcast_id").eq("podcast_id", podcast.id).maybeSingle();
+  if (optout) return { ok: false, error: "This show's creators have asked us not to summarise it." };
+
+  const feedEpisode = (await getFeedEpisodes(podcast.rss_url).catch(() => [])).find((e) => e.guid === guid);
+  if (!feedEpisode) return { ok: false, error: "Couldn't find that episode. Try again in a minute." };
+  if (!feedEpisode.audioUrl) return { ok: false, error: "This episode has no audio we can use." };
+  if ((feedEpisode.durationSeconds ?? 0) > MAX_EPISODE_MINUTES * 60) {
+    return { ok: false, error: `Episodes over ${MAX_EPISODE_MINUTES / 60} hours can't be summarised yet.` };
+  }
+
+  const episodeId = await importEpisode(podcast.id, feedEpisode);
+  const { data: episode } = await admin.from("episodes").select("status, attempts").eq("id", episodeId).single();
+  if (episode?.status === "done") return { ok: true, episodeId, ready: true };
+  if (episode?.status === "transcribing" || episode?.status === "summarising") {
+    return { ok: true, episodeId, ready: false };
+  }
+  if (episode?.status === "failed" && episode.attempts >= MAX_ATTEMPTS) {
+    return { ok: false, error: "We couldn't summarise this episode." };
+  }
+
+  // Cost guard per person, on top of the daily cap for everyone.
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { count } = await admin
+    .from("product_events")
+    .select("id", { count: "exact", head: true })
+    .eq("event", "summary_request")
+    .eq("user_id", user.id)
+    .gte("created_at", since);
+  if ((count ?? 0) >= SUMMARY_REQUESTS_PER_DAY) {
+    return { ok: false, error: `You can get ${SUMMARY_REQUESTS_PER_DAY} older episodes a day. Try again tomorrow.` };
+  }
+  await recordEvent("summary_request", { userId: user.id, props: { episodeId } });
+
+  after(async () => {
+    try {
+      const result = await processEpisodeById(episodeId);
+      console.log("[request] summarised:", JSON.stringify(result));
+    } catch (err) {
+      console.error("[request] summarise failed:", err);
+    }
+  });
+
+  revalidatePath("/feed");
+  revalidatePath("/library");
+  return { ok: true, episodeId, ready: false };
 }
 
 export async function unfollowPodcast(podcastId: string): Promise<ActionResult> {
