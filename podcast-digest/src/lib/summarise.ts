@@ -3,7 +3,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 
-const MODEL = "claude-opus-5-5";
+// Sonnet: in a blind test (Oct 2026) every summary was good enough to send, with the fewest
+// factual errors, at under half Opus's cost. Haiku invented numbers and quotes.
+const MODEL = "claude-sonnet-5-5";
 
 const SummarySchema = z.object({
   overview: z.string().describe("3-5 sentence plain-English overview of the episode."),
@@ -32,7 +34,8 @@ const SummarySchema = z.object({
     .array(
       z.object({
         name: z.string(),
-        type: z.enum(["book", "website", "product", "tool", "person", "study", "podcast", "other"]),
+        // Smaller models sometimes invent a type (e.g. "company"): keep the resource, file it under "other".
+        type: z.enum(["book", "website", "product", "tool", "person", "study", "podcast", "other"]).catch("other"),
         url: z.string().nullable().describe("Only if the URL is stated in the episode or description, else null."),
       }),
     )
@@ -54,23 +57,39 @@ export type EpisodeSummary = z.infer<typeof SummarySchema>;
 
 const SYSTEM = `You summarise podcast episodes for busy listeners who want the useful parts without listening to the whole thing.
 
-Write in clear, plain English. Be specific: keep the numbers, names, and concrete steps that make an idea useful, and drop filler, ads, and sponsor reads. Never invent anything that isn't in the transcript. When the transcript has [mm:ss] or [h:mm:ss] markers, convert the nearest marker before a quote or tip into seconds for its timestamp.`;
+Write in clear, plain English. Be specific: keep the numbers, names, and concrete steps that make an idea useful, and drop filler, ads, and sponsor reads. Never invent anything that isn't in the transcript. When the transcript has [mm:ss] or [h:mm:ss] markers, convert the nearest marker before a quote or tip into seconds for its timestamp.
+
+Quotes must be word for word from one continuous passage. Never join separate passages or finish a sentence that was cut off. Attribute each quote to the person who actually said those words: if a host reads out or relays someone else's words, name the original speaker, or use null if unsure.
+
+Only list resources that are discussed in the episode itself. Skip sponsors and ads, including links that only appear in the episode description.`;
 
 let client: Anthropic | null = null;
 
-export async function summariseEpisode(input: {
-  podcastTitle: string;
-  episodeTitle: string;
-  description: string | null;
-  transcript: string;
-}): Promise<EpisodeSummary> {
+export type SummariseOptions = {
+  /** Defaults to MODEL. Haiku has no effort setting, so it is left out for Haiku. */
+  model?: string;
+  /** Called with token counts, e.g. to compare model costs. */
+  onUsage?: (usage: { input_tokens: number; output_tokens: number }) => void;
+};
+
+export async function summariseEpisode(
+  input: {
+    podcastTitle: string;
+    episodeTitle: string;
+    description: string | null;
+    transcript: string;
+  },
+  options: SummariseOptions = {},
+): Promise<EpisodeSummary> {
   client ??= new Anthropic();
+  const model = options.model ?? MODEL;
+  const format = betaZodOutputFormat(SummarySchema);
 
   const response = await client.beta.messages.parse({
-    model: MODEL,
+    model,
     max_tokens: 16000,
     system: SYSTEM,
-    output_config: { effort: "medium", format: betaZodOutputFormat(SummarySchema) },
+    output_config: model.startsWith("claude-haiku") ? { format } : { effort: "medium", format },
     // If Claude's safety checks decline the request, the API retries on a fallback model.
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
@@ -92,6 +111,7 @@ export async function summariseEpisode(input: {
     ],
   });
 
+  options.onUsage?.(response.usage);
   if (response.stop_reason === "refusal") {
     throw new Error(`Claude declined to summarise this episode (${response.stop_details?.category ?? "no category"}).`);
   }

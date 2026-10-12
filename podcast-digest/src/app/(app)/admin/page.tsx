@@ -9,7 +9,7 @@ import { timeAgo } from "@/lib/format";
 export const metadata = { title: "Admin · Podcast Digest" };
 
 // Rough per-unit costs (USD) for the cost estimate below.
-const CLAUDE_PER_EPISODE = 0.15;
+const CLAUDE_PER_EPISODE = 0.06;
 const DEEPGRAM_PER_MINUTE = 0.0043;
 const DAILY_CAP = Number(process.env.MAX_EPISODES_PER_DAY) || 30;
 
@@ -156,7 +156,7 @@ export default async function AdminPage() {
             </ul>
           </>
         )}
-        <p className="mt-2 text-xs text-muted">Estimates use ~US$0.15 per summary and Deepgram&apos;s list price. Your Anthropic console has exact figures.</p>
+        <p className="mt-2 text-xs text-muted">Estimates use ~US$0.06 per summary and Deepgram&apos;s list price. Your Anthropic console has exact figures.</p>
       </section>
 
       <section>

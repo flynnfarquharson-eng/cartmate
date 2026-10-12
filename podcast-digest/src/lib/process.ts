@@ -14,7 +14,7 @@ const STALE_AFTER_MS = 15 * 60 * 1000;
 export const MAX_EPISODE_MINUTES = 240;
 /**
  * Cost guard: never start more than this many episodes in 24 hours, across everyone.
- * At roughly US$0.15-0.45 each, 30 a day is at most ~US$13. Override with MAX_EPISODES_PER_DAY.
+ * At roughly US$0.06-0.35 each, 30 a day is at most ~US$11. Override with MAX_EPISODES_PER_DAY.
  */
 const MAX_EPISODES_PER_DAY = Number(process.env.MAX_EPISODES_PER_DAY) || 30;
 
