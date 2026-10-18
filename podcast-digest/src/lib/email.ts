@@ -1,9 +1,10 @@
 import "server-only";
+import nodemailer from "nodemailer";
 import { requireEnv } from "@/lib/env";
 
-// Sends through Resend's REST API. Docs: https://resend.com/docs/api-reference/emails/send-email
-// EMAIL_FROM must be on a domain verified in Resend, e.g. "Podie <digest@yourdomain.com>".
-// Before a domain is verified, Resend only delivers "onboarding@resend.dev" mail to your own address.
+// Sends through Gmail SMTP when GMAIL_USER + GMAIL_APP_PASSWORD are set (cheap test setup, ~500/day),
+// otherwise through Resend's REST API. Resend docs: https://resend.com/docs/api-reference/emails/send-email
+// For Resend, EMAIL_FROM must be on a domain verified in Resend, e.g. "Podie <digest@yourdomain.com>".
 
 export type OutgoingEmail = {
   to: string;
@@ -13,7 +14,29 @@ export type OutgoingEmail = {
   headers?: Record<string, string>;
 };
 
+let gmail: nodemailer.Transporter | null = null;
+
+function gmailTransport(): nodemailer.Transporter {
+  gmail ??= nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, "") },
+  });
+  return gmail;
+}
+
 export async function sendEmail(email: OutgoingEmail): Promise<{ id: string }> {
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    const info = await gmailTransport().sendMail({
+      from: `Podie <${process.env.GMAIL_USER}>`,
+      to: email.to,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      headers: email.headers,
+    });
+    return { id: info.messageId };
+  }
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
