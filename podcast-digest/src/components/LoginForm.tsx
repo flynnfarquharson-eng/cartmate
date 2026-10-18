@@ -3,43 +3,107 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export function LoginForm({ next, cta = "Email me a login link" }: { next?: string; cta?: string }) {
+/**
+ * Email sign-up and login. We email a code (and a link). Typing the code keeps people
+ * inside Instagram's browser instead of bouncing them to their email app and back.
+ */
+export function LoginForm({ next, cta = "Email me a login code" }: { next?: string; cta?: string }) {
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [resent, setResent] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setState("sending");
+  async function sendCode() {
     const supabase = createClient();
     const redirect = new URL("/auth/callback", window.location.origin);
     if (next) redirect.searchParams.set("next", next);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirect.toString() },
-    });
-    if (error) {
-      setState("error");
-      setMessage(error.message);
-    } else {
-      setState("sent");
-    }
+    return supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect.toString() } });
   }
 
-  if (state === "sent") {
+  async function onEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const { error } = await sendCode();
+    setBusy(false);
+    if (error) return setMessage(error.message);
+    setStep("code");
+  }
+
+  async function onCode(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const { error } = await createClient().auth.verifyOtp({ email, token: code.trim(), type: "email" });
+    if (error) {
+      setBusy(false);
+      return setMessage("That code didn't work. Check it, or send a new one.");
+    }
+    // Finish sign-up on the server (digest subscription, where they came from), then into the app.
+    const finish = new URL("/auth/finish", window.location.origin);
+    if (next) finish.searchParams.set("next", next);
+    window.location.assign(finish.toString());
+  }
+
+  const input = "w-full rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-accent";
+  const button = "w-full rounded-xl bg-accent px-4 py-3 font-medium text-white disabled:opacity-60 dark:text-black";
+
+  if (step === "code") {
     return (
-      <div className="rounded-2xl border border-border bg-surface p-5 text-center">
-        <p className="font-medium">Check your inbox</p>
-        <p className="mt-1 text-sm text-muted">
-          We sent a link to <span className="text-text">{email}</span>. Tap it on this device to
-          confirm and pick your shows.
+      <form onSubmit={onCode} className="space-y-3">
+        <p className="text-sm">
+          We sent a code to <span className="font-medium">{email}</span>. Enter it here.
         </p>
-      </div>
+        <input
+          required
+          autoFocus
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6,10}"
+          maxLength={10}
+          placeholder="Code from the email"
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+          className={`${input} tracking-[0.3em]`}
+        />
+        <button type="submit" disabled={busy || code.length < 6} className={button}>
+          {busy ? "Checking…" : "Continue"}
+        </button>
+        {message && <p className="text-sm text-red-600">{message}</p>}
+        <div className="flex justify-between text-xs text-muted">
+          <button
+            type="button"
+            disabled={resent}
+            onClick={async () => {
+              setResent(true);
+              const { error } = await sendCode();
+              setMessage(error ? error.message : "");
+            }}
+            className="underline disabled:no-underline"
+          >
+            {resent ? "New code sent" : "Send a new code"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStep("email");
+              setCode("");
+              setMessage("");
+              setResent(false);
+            }}
+            className="underline"
+          >
+            Use a different email
+          </button>
+        </div>
+      </form>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
+    <form onSubmit={onEmail} className="space-y-3">
       <input
         type="email"
         required
@@ -48,16 +112,12 @@ export function LoginForm({ next, cta = "Email me a login link" }: { next?: stri
         placeholder="you@example.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-accent"
+        className={input}
       />
-      <button
-        type="submit"
-        disabled={state === "sending"}
-        className="w-full rounded-xl bg-accent px-4 py-3 font-medium text-white disabled:opacity-60 dark:text-black"
-      >
-        {state === "sending" ? "Sending…" : cta}
+      <button type="submit" disabled={busy} className={button}>
+        {busy ? "Sending…" : cta}
       </button>
-      {state === "error" && <p className="text-sm text-red-600">{message}</p>}
+      {message && <p className="text-sm text-red-600">{message}</p>}
     </form>
   );
 }
