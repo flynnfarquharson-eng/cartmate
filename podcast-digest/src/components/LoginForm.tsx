@@ -36,15 +36,18 @@ export function LoginForm({ next, cta = "Email me a login code" }: { next?: stri
     e.preventDefault();
     setBusy(true);
     setMessage("");
-    const { error } = await createClient().auth.verifyOtp({ email, token: code.trim(), type: "email" });
-    if (error) {
+    // Checked on the server so the login cookies last (see /auth/verify).
+    const res = await fetch("/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    }).catch(() => null);
+    if (!res?.ok) {
       setBusy(false);
       return setMessage("That code didn't work. Check it, or send a new one.");
     }
-    // Finish sign-up on the server (digest subscription, where they came from), then into the app.
-    const finish = new URL("/auth/finish", window.location.origin);
-    if (next) finish.searchParams.set("next", next);
-    window.location.assign(finish.toString());
+    const target = next?.startsWith("/") && !next.startsWith("//") ? next : "/feed";
+    window.location.assign(target);
   }
 
   const input = "w-full rounded-xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-accent";
